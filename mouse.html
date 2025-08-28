@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Mouse</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f4f6f8;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        h1 {
+            color: #000;
+            text-transform: uppercase;
+            margin: 0;    
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0; /* garante que ocupe até o fim */
+            width: 100%;
+            background: #fff;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            z-index: 1000;
+            flex-wrap: wrap;
+            gap: 10px;
+            box-sizing: border-box; /* impede que padding estoure a largura */
+        }
+
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 24px;
+            margin-right: 10px;
+            margin-top: 8px;
+        }
+
+        .cart-icon img {
+            width: 34px;
+            transition: transform 0.2s ease;
+        }
+
+        .cart-icon.bounce img {
+            transform: scale(1.3);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            background: red;
+            color: white;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* Dropdown do carrinho */
+        .cart-dropdown {
+            display: none;                 /* começa oculto */
+            position: fixed;
+            top: 60px;                     /* logo abaixo do header */
+            right: 0;
+            width: 400px;
+            height: calc(100vh - 60px);    /* altura total visível */
+            background: white;
+            border-radius: 8px 0 0 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            padding: 10px;
+            z-index: 2000;
+            /* quando abrir via JS, usaremos display:flex */
+            flex-direction: column;
+        }
+
+        #cart-items {
+            overflow-y: auto;      /* rolagem só aqui */
+            flex: 1;               /* ocupa o espaço disponível */
+            display: block;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .cart-item img {
+            width: 90px;
+            height: 90%;
+            object-fit: contain;
+        }
+        .cart-item-info {
+            flex: 1;
+            font-size: 13px;
+        }
+        .cart-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .cart-controls button {
+            border: none;
+            background: #ddd;
+            padding: 4px 8px; 
+            cursor: pointer;
+            font-size: 15px; /*aumenta o tamanho do + - e da lixeira*/
+            border-radius: 4px;
+        }
+        .remove-btn {
+            background: red;
+            color: white;
+        }
+        .cart-total {
+           font-weight: bold;
+            margin-top: 10px;
+            text-align: right;
+
+            position: sticky;   /* fixa dentro do scroller */
+            bottom: 52px;       /* espaço para o botão (ajusto dinamicamente no JS também) */
+            background: white;
+            padding: 8px 0;
+            z-index: 1;
+        }
+        .cart-dropdown button.finalizar {
+            flex-shrink: 0;
+            width: 100%;
+            padding: 12px;      /* um pouco mais alto */
+            background: #0aa030;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+            font-weight: bold;
+
+            position: sticky;   /* fica colado no fundo do scroller */
+            bottom: 12px;
+            z-index: 2;
+        }
+
+                        /* Tooltip de aviso do botão finalizar */
+        .finalizar-tooltip {
+            position: absolute;
+            background: #ff4d4f;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            top: -58px;       /* acima do botão */
+            left: 0;
+            opacity: 0;
+            transform: translateY(0);
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            white-space: nowrap;
+            z-index: 3000;
+        }
+        .finalizar-tooltip.show {
+            opacity: 1;
+            transform: translateY(-10px);
+        }
+
+        .sucesso-tooltip {
+            position: fixed;
+            background: #0aa030;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            top: 18%; 
+            left: 50%; 
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            z-index: 4000;
+            white-space: nowrap;
+        }
+
+        .sucesso-tooltip.show {
+            opacity: 1;
+            transform: translate(-50%, -20%);
+        }
+
+                        /* Remove setas do input number */
+        .cart-controls input[type="number"]::-webkit-outer-spin-button,
+        .cart-controls input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .cart-controls input[type="number"] {
+            font-size: 16px;
+            width: 50px;
+            text-align: center;
+            border-radius: 6px;
+            border: 1px solid #bbb;
+            padding: 4px 6px;
+            background-color: #f9f9f9;
+            font-family: 'Arial', sans-serif; /* você pode trocar para outra fonte bonita */
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+
+        .cart-controls input[type="number"]:focus {
+            outline: none;
+            border-color: #0a9b43;
+            box-shadow: 0 0 4px #0a9b43;
+        }
+
+        .produto {
+            background: #fff;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            width: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s;
+        }
+
+        .produto:hover {
+            transform: translateY(-5px);
+        }
+
+        .produto img {
+            width: 100%;
+            border-bottom: 1px solid rgb(114, 107, 107);
+            object-fit: contain;
+            background: #f0f0f0;
+        }
+
+        .codigo {
+            font-size: 13px;
+            color: #555;
+            margin-top: 8px;
+        }
+
+        .titulo {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 7px 0 12px 0;
+            color: #202020;
+            height: auto;
+        }
+
+        .precos {
+            text-align: right;
+            margin-top: auto;
+        }
+
+        .preco-atual {
+            color: #0a9b43;
+            font-weight: bold;
+            font-size: 21px;
+        }
+
+        .preco-antigo {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .desconto {
+            color: #1bbf00;
+            background-color: #e6ffe6;
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .pix {
+            font-size: 13px;
+            color: #777;
+        }
+
+        .add-btn {
+            margin-top: 10px;
+            padding: 8px;
+            background: #0a9b43;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .add-btn:hover {
+            background: #0d7e39;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🛒 Mouse</h1>
+        <div class="cart-icon" onclick="toggleCarrinho()" id="cart-icon">
+            <img src="https://cdn-icons-png.flaticon.com/512/1170/1170678.png" alt="Carrinho">
+            <div class="cart-count" id="cart-count">0</div>
+
+            <div class="cart-dropdown" id="cart-dropdown">
+                <div id="cart-items"></div>
+                <div class="cart-total" id="cart-total">Total: R$ 0,00</div>
+                <button class="finalizar" onclick="finalizarCompra()">Finalizar</button>
+            </div>
+        </div>
+    </header>
+
+    <div style="margin-top:80px; display:flex; flex-wrap:wrap; justify-content:center; width:100%;">
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/379711-300-300/p_58927_alta_1.png?v=638545764514400000" alt="Produto">
+            <div class="codigo">Cód.: 582791</div>
+            <div class="titulo">Combo Kross Teclado e Mouse USB, Com Fio, Elegance - KE-KM400V1 2 | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 42,09 por</div>
+                <div class="preco-atual">R$ 35,49 <span class="pix">no pix</span></div>
+                <div class="desconto">-12% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Combo Kross Teclado e Mouse USB, Com Fio, Elegance - KE-KM400V1 2 | Preto', 35.492, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/379711-300-300/p_58927_alta_1.png?v=638545764514400000', '582791')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/363776-300-300/p_58687_alta_4.png?v=638463548106500000" alt="Produto">
+            <div class="codigo">Cód.: 582742</div>
+            <div class="titulo">Mouse Bright USB, 800 DPI - 0107 | Preto/Cinza</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 13,92 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Bright USB, 800 DPI - 0107 | Preto/Cinza', 13.9177, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/363776-300-300/p_58687_alta_4.png?v=638463548106500000', '582742')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/350038-300-300/p_39866_alta_1.png?v=638387860250230000" alt="Produto">
+            <div class="codigo">Cód.: 581448</div>
+            <div class="titulo">Mouse Logitech M90</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 40,95 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Logitech M90', 40.9491, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/350038-300-300/p_39866_alta_1.png?v=638387860250230000', '581448')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/350411-300-300/p_56707_alta_1.png?v=638387873814130000" alt="Produto">
+            <div class="codigo">Cód.: 582468</div>
+            <div class="titulo">Mouse Sem Fio Kross Elegance, 1.600Dpi - KE-M218 DC 1.5V | Vermelho</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 34,48 por</div>
+                <div class="preco-atual">R$ 25,59 <span class="pix">no pix</span></div>
+                <div class="desconto">-25% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Kross Elegance, 1.600Dpi - KE-M218 DC 1.5V | Vermelho', 25.594199999999997, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/350411-300-300/p_56707_alta_1.png?v=638387873814130000', '582468')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/417014-300-300/a_582953_alta_1.jpg?v=638738649171370000" alt="Produto">
+            <div class="codigo">Cód.: 582953</div>
+            <div class="titulo">Mouse Sem Fio Logitech M196 GRAFITE Grafite</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 85,21 por</div>
+                <div class="preco-atual">R$ 75,26 <span class="pix">no pix</span></div>
+                <div class="desconto">-6% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Logitech M196 GRAFITE Grafite', 75.2647, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/417014-300-300/a_582953_alta_1.jpg?v=638738649171370000', '582953')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/343801-300-300/p_45734_alta_1.png?v=638367086982130000" alt="Produto">
+            <div class="codigo">Cód.: 581453</div>
+            <div class="titulo">Combo Sem fio Logitech Teclado e Mouse MK235 Wireless Keyboard | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 167,48 por</div>
+                <div class="preco-atual">R$ 152,70 <span class="pix">no pix</span></div>
+                <div class="desconto">-2% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Combo Sem fio Logitech Teclado e Mouse MK235 Wireless Keyboard | Preto', 152.70469999999997, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/343801-300-300/p_45734_alta_1.png?v=638367086982130000', '581453')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/323002-300-300/p_56703_alta_1.png?v=638273802474730000" alt="Produto">
+            <div class="codigo">Cód.: 582655</div>
+            <div class="titulo">Combo Kross Teclado e Mouse USB, Sem Fio, Elegance - KE-KM553V1 | Preto/Vermelho</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 89,35 por</div>
+                <div class="preco-atual">R$ 75,30 <span class="pix">no pix</span></div>
+                <div class="desconto">-10% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Combo Kross Teclado e Mouse USB, Sem Fio, Elegance - KE-KM553V1 | Preto/Vermelho', 75.301, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/323002-300-300/p_56703_alta_1.png?v=638273802474730000', '582655')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/350449-300-300/p_56708_alta_1.png?v=638387874696200000" alt="Produto">
+            <div class="codigo">Cód.: 582697</div>
+            <div class="titulo">Mouse Sem Fio Kross, Recarregável 1.600Dpi - KE-M305 | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 62,49 por</div>
+                <div class="preco-atual">R$ 51,10 <span class="pix">no pix</span></div>
+                <div class="desconto">-14% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Kross, Recarregável 1.600Dpi - KE-M305 | Preto', 51.101, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/350449-300-300/p_56708_alta_1.png?v=638387874696200000', '582697')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/191059-300-300/a_582186_alta_1.png?v=637584156785970000" alt="Produto">
+            <div class="codigo">Cód.: 582186</div>
+            <div class="titulo">Mouse Pad Bright Ergonômico Com Apoio em Gel, 0307 | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 28,81 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Pad Bright Ergonômico Com Apoio em Gel, 0307 | Preto', 28.8128, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/191059-300-300/a_582186_alta_1.png?v=637584156785970000', '582186')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/343655-300-300/a_581936_alta_1.png?v=638367083371700000" alt="Produto">
+            <div class="codigo">Cód.: 581936</div>
+            <div class="titulo">Combo Logitech Teclado e Mouse MK295 Silent Sem Fio</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 227,68 por</div>
+                <div class="preco-atual">R$ 206,16 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Combo Logitech Teclado e Mouse MK295 Silent Sem Fio', 206.1625, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/343655-300-300/a_581936_alta_1.png?v=638367083371700000', '581936')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/387116-300-300/p_56707_alta_1.png?v=638583100394470000" alt="Produto">
+            <div class="codigo">Cód.: 582862</div>
+            <div class="titulo">Mouse Sem Fio Kross Elegance, 1.600Dpi - KE-M218 DC 1.5V | Vermelho</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 32,87 por</div>
+                <div class="preco-atual">R$ 27,35 <span class="pix">no pix</span></div>
+                <div class="desconto">-14% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Kross Elegance, 1.600Dpi - KE-M218 DC 1.5V | Vermelho', 27.348699999999997, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/387116-300-300/p_56707_alta_1.png?v=638583100394470000', '582862')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/439354-300-300/p_60013_alta_1.jpg?v=638871710641600000" alt="Produto">
+            <div class="codigo">Cód.: 582939</div>
+            <div class="titulo">Kit Gamer Kross Elegance KE-GK4100 4 em 1, Teclado, Mousepad, Headset e Mouse 6 botões 2400DPI | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 139,39 por</div>
+                <div class="preco-atual">R$ 114,43 <span class="pix">no pix</span></div>
+                <div class="desconto">-12% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Kit Gamer Kross Elegance KE-GK4100 4 em 1, Teclado, Mousepad, Headset e Mouse 6 botões 2400DPI | Preto', 114.43239999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/439354-300-300/p_60013_alta_1.jpg?v=638871710641600000', '582939')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/444596-300-300/p_60786_alta_2.jpg?v=638901625554670000" alt="Produto">
+            <div class="codigo">Cód.: 583006</div>
+            <div class="titulo">Mouse Com Fio USB Logitech M90, Rastreamento Óptico de Alta Definição 1000 DPI, Cabo 180cm | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 44,81 por</div>
+                <div class="preco-atual">R$ 42,50 <span class="pix">no pix</span></div>
+                <div class="desconto">-6% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Com Fio USB Logitech M90, Rastreamento Óptico de Alta Definição 1000 DPI, Cabo 180cm | Preto', 42.497899999999994, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/444596-300-300/p_60786_alta_2.jpg?v=638901625554670000', '583006')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/423943-300-300/a_582961_alta_1.jpg?v=638780844745870000" alt="Produto">
+            <div class="codigo">Cód.: 582961</div>
+            <div class="titulo">Mouse Sem fio Logitech Silent Mouse | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 87,13 por</div>
+                <div class="preco-atual">R$ 79,21 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem fio Logitech Silent Mouse | Preto', 79.2093, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/423943-300-300/a_582961_alta_1.jpg?v=638780844745870000', '582961')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/443004-300-300/p_60725_alta_1.jpg?v=638892511803370000" alt="Produto">
+            <div class="codigo">Cód.: 583004</div>
+            <div class="titulo">Mouse Gamer Redragon, Até 7200Dpi, Conexão Bluetooth e USB Tipo-C, M694-RGB | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 148,47 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Gamer Redragon, Até 7200Dpi, Conexão Bluetooth e USB Tipo-C, M694-RGB | Preto', 148.4697, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/443004-300-300/p_60725_alta_1.jpg?v=638892511803370000', '583004')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/437219-300-300/p_60637_alta_1.jpg?v=638857864200730000" alt="Produto">
+            <div class="codigo">Cód.: 582995</div>
+            <div class="titulo">Combo Com FIO Teclado e Mouse ACER OCC300 Gen2, Teclado numérico, Teclas multimidias, Mouse Sensor óptico com 12k de DPI. Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 114,73 por</div>
+                <div class="preco-atual">R$ 99,59 <span class="pix">no pix</span></div>
+                <div class="desconto">-7% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Combo Com FIO Teclado e Mouse ACER OCC300 Gen2, Teclado numérico, Teclas multimidias, Mouse Sensor óptico com 12k de DPI. Preto', 99.5857, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/437219-300-300/p_60637_alta_1.jpg?v=638857864200730000', '582995')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/405662-300-300/p_59655_alta_3.jpg?v=638665076535600000" alt="Produto">
+            <div class="codigo">Cód.: 582908</div>
+            <div class="titulo">Mouse Sem fio Lenovo 300, 1000 DPI, Design Ambidestro, a Pillha- GX30K79401 | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 90,58 por</div>
+                <div class="preco-atual">R$ 54,04 <span class="pix">no pix</span></div>
+                <div class="desconto">-38% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem fio Lenovo 300, 1000 DPI, Design Ambidestro, a Pillha- GX30K79401 | Preto', 54.0413, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/405662-300-300/p_59655_alta_3.jpg?v=638665076535600000', '582908')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418200-300-300/a_582954_alta_1.jpg?v=638744722498270000" alt="Produto">
+            <div class="codigo">Cód.: 582954</div>
+            <div class="titulo">Mouse Sem Fio Logitech M196 GRAFITE Branco</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 83,12 por</div>
+                <div class="preco-atual">R$ 75,57 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Logitech M196 GRAFITE Branco', 75.5672, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418200-300-300/a_582954_alta_1.jpg?v=638744722498270000', '582954')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/442888-300-300/p_60726_alta_1.jpg?v=638892510262630000" alt="Produto">
+            <div class="codigo">Cód.: 583005</div>
+            <div class="titulo">Mouse Gamer Redragon, 12400 DPI, USB, 7 Botões - M806-RGB | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 142,08 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Gamer Redragon, 12400 DPI, USB, 7 Botões - M806-RGB | Preto', 142.0809, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/442888-300-300/p_60726_alta_1.jpg?v=638892510262630000', '583005')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/350236-300-300/a_582451_alta_1.png?v=638387867415700000" alt="Produto">
+            <div class="codigo">Cód.: 582451</div>
+            <div class="titulo">Mouse Logitech M100, com 1.000 DPI | Cinza/ Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 53,28 por</div>
+                <div class="preco-atual">R$ 48,80 <span class="pix">no pix</span></div>
+                <div class="desconto">-2% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Logitech M100, com 1.000 DPI | Cinza/ Preto', 48.802, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/350236-300-300/a_582451_alta_1.png?v=638387867415700000', '582451')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/343699-300-300/a_581998_alta_1.png?v=638367084583530000" alt="Produto">
+            <div class="codigo">Cód.: 581998</div>
+            <div class="titulo">Mouse Gamer Redragon Cobra M711, 10000 DPI Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 127,36 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Gamer Redragon Cobra M711, 10000 DPI Preto', 127.3552, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/343699-300-300/a_581998_alta_1.png?v=638367084583530000', '581998')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/327573-300-300/p_58084_alta_1.png?v=638303876980470000" alt="Produto">
+            <div class="codigo">Cód.: 582679</div>
+            <div class="titulo">Mouse Gamer Kross Pulse, Com Fio, 6 Botões, 6400DPI - KE-MG105 | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 43,31 por</div>
+                <div class="preco-atual">R$ 36,47 <span class="pix">no pix</span></div>
+                <div class="desconto">-12% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Gamer Kross Pulse, Com Fio, 6 Botões, 6400DPI - KE-MG105 | Preto', 36.4721, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/327573-300-300/p_58084_alta_1.png?v=638303876980470000', '582679')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/403399-300-300/a_582738_alta_1.png?v=638648776284130000" alt="Produto">
+            <div class="codigo">Cód.: 582738</div>
+            <div class="titulo">Mouse Logitech sem fio Signature M650 Branco</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 212,22 por</div>
+                <div class="preco-atual">R$ 192,37 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Logitech sem fio Signature M650 Branco', 192.36849999999998, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/403399-300-300/a_582738_alta_1.png?v=638648776284130000', '582738')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/427874-300-300/a_582972_alta_1.jpg?v=638804278774900000" alt="Produto">
+            <div class="codigo">Cód.: 582972</div>
+            <div class="titulo">Mouse sem fio Logitech M310 Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 120,99 por</div>
+                <div class="preco-atual">R$ 109,81 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse sem fio Logitech M310 Preto', 109.81020000000001, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/427874-300-300/a_582972_alta_1.jpg?v=638804278774900000', '582972')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/384069-300-300/a_582627_alta_1.png?v=638563162283600000" alt="Produto">
+            <div class="codigo">Cód.: 582627</div>
+            <div class="titulo">Mouse Sem Fio Logitech M170 | Branco</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 73,91 por</div>
+                <div class="preco-atual">R$ 67,52 <span class="pix">no pix</span></div>
+                <div class="desconto">-2% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Logitech M170 | Branco', 67.5207, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/384069-300-300/a_582627_alta_1.png?v=638563162283600000', '582627')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/388189-300-300/a_582872_alta_1.jpg?v=638593148630770000" alt="Produto">
+            <div class="codigo">Cód.: 582872</div>
+            <div class="titulo">Mouse Pad Logitech G240 Cloth Gamer</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 91,22 por</div>
+                <div class="preco-atual">R$ 76,29 <span class="pix">no pix</span></div>
+                <div class="desconto">-11% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Pad Logitech G240 Cloth Gamer', 76.2932, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/388189-300-300/a_582872_alta_1.jpg?v=638593148630770000', '582872')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/360055-300-300/p_58571_alta_1.png?v=638430968520300000" alt="Produto">
+            <div class="codigo">Cód.: 582714</div>
+            <div class="titulo">Mouse Gamer C/Fio Kross Gungnir, USB, 4800 DPI - KE-MG125 Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 62,51 por</div>
+                <div class="preco-atual">R$ 55,55 <span class="pix">no pix</span></div>
+                <div class="desconto">-5% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Gamer C/Fio Kross Gungnir, USB, 4800 DPI - KE-MG125 Preto', 55.5538, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/360055-300-300/p_58571_alta_1.png?v=638430968520300000', '582714')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/349037-300-300/a_582703_alta_1.png?v=638384339897570000" alt="Produto">
+            <div class="codigo">Cód.: 582703</div>
+            <div class="titulo">Mouse Sem Fio Logitech Pebble Mouse 2 M350S | Grafite</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 113,91 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Logitech Pebble Mouse 2 M350S | Grafite', 113.91210000000001, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/349037-300-300/a_582703_alta_1.png?v=638384339897570000', '582703')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/349045-300-300/a_582701_alta_1.png?v=638384339995230000" alt="Produto">
+            <div class="codigo">Cód.: 582701</div>
+            <div class="titulo">Mouse Sem Fio Logitech Pebble Mouse 2 M350S | Rose</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 120,70 por</div>
+                <div class="preco-atual">R$ 109,59 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Logitech Pebble Mouse 2 M350S | Rose', 109.5924, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/349045-300-300/a_582701_alta_1.png?v=638384339995230000', '582701')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/438655-300-300/p_60605_alta_1.jpg?v=638870602356500000" alt="Produto">
+            <div class="codigo">Cód.: 582994</div>
+            <div class="titulo">Mouse Predator Cestus 327 PMW300, 5 níveis de seleção com máximo de 8000 DPI | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 246,27 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Predator Cestus 327 PMW300, 5 níveis de seleção com máximo de 8000 DPI | Preto', 246.274, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/438655-300-300/p_60605_alta_1.jpg?v=638870602356500000', '582994')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/411457-300-300/p-59918-alta-1.jpg?v=638702059371570000" alt="Produto">
+            <div class="codigo">Cód.: 582929</div>
+            <div class="titulo">Mouse Gamer Kroos Elegance Valhalla, 6 botões, DPI 6400, RGB - KE-MG200 | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 87,85 por</div>
+                <div class="preco-atual">R$ 73,00 <span class="pix">no pix</span></div>
+                <div class="desconto">-12% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Gamer Kroos Elegance Valhalla, 6 botões, DPI 6400, RGB - KE-MG200 | Preto', 73.002, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/411457-300-300/p-59918-alta-1.jpg?v=638702059371570000', '582929')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/384287-300-300/a_582840_alta_1.jpg?v=638565724194530000" alt="Produto">
+            <div class="codigo">Cód.: 582840</div>
+            <div class="titulo">Mouse Logitech MX Master 3s, Recarregável USB-C | Grafite</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 682,89 por</div>
+                <div class="preco-atual">R$ 626,42 <span class="pix">no pix</span></div>
+                <div class="desconto">-1% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Logitech MX Master 3s, Recarregável USB-C | Grafite', 626.4197, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/384287-300-300/a_582840_alta_1.jpg?v=638565724194530000', '582840')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418343-300-300/a_582960_alta_1.jpg?v=638747343932830000" alt="Produto">
+            <div class="codigo">Cód.: 582960</div>
+            <div class="titulo">Mouse Sem Fio Logitech M196 Rosa</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 82,89 por</div>
+                <div class="preco-atual">R$ 75,37 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Logitech M196 Rosa', 75.3736, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418343-300-300/a_582960_alta_1.jpg?v=638747343932830000', '582960')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/350631-300-300/a_582561_alta_1.png?v=638387881202300000" alt="Produto">
+            <div class="codigo">Cód.: 582561</div>
+            <div class="titulo">Mouse Logitech M110 Silent Cliques Silenciosos | Cinza</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 58,34 por</div>
+                <div class="preco-atual">R$ 53,19 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Logitech M110 Silent Cliques Silenciosos | Cinza', 53.1943, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/350631-300-300/a_582561_alta_1.png?v=638387881202300000', '582561')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/232573-300-300/a_582326_alta_1.png?v=637771830668400000" alt="Produto">
+            <div class="codigo">Cód.: 582326</div>
+            <div class="titulo">Mouse Pad Studio Series Logitech Antideslizante 20x23 cm | Azul</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 55,86 por</div>
+                <div class="preco-atual">R$ 49,78 <span class="pix">no pix</span></div>
+                <div class="desconto">-5% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Pad Studio Series Logitech Antideslizante 20x23 cm | Azul', 49.7821, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/232573-300-300/a_582326_alta_1.png?v=637771830668400000', '582326')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/232580-300-300/a_582328_alta_1.png?v=637771830781770000" alt="Produto">
+            <div class="codigo">Cód.: 582328</div>
+            <div class="titulo">Mouse Pad Desk Mat Studio Series Logitech Antideslizante 30x70 cm | Cinza</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 140,96 por</div>
+                <div class="preco-atual">R$ 127,81 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Pad Desk Mat Studio Series Logitech Antideslizante 30x70 cm | Cinza', 127.815, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/232580-300-300/a_582328_alta_1.png?v=637771830781770000', '582328')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/407830-300-300/a_582925_alta_1.png?v=638681370981400000" alt="Produto">
+            <div class="codigo">Cód.: 582925</div>
+            <div class="titulo">Mouse Logitech Sem Fio LIFT, Vertical, Ergonômico Branco</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 394,85 por</div>
+                <div class="preco-atual">R$ 346,53 <span class="pix">no pix</span></div>
+                <div class="desconto">-6% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Logitech Sem Fio LIFT, Vertical, Ergonômico Branco', 346.53459999999995, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/407830-300-300/a_582925_alta_1.png?v=638681370981400000', '582925')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/357163-300-300/a_582699_alta_2.png?v=638412699594300000" alt="Produto">
+            <div class="codigo">Cód.: 582699</div>
+            <div class="titulo">Mouse Sem Fio Logitech M240 Silent | Branco</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 93,21 por</div>
+                <div class="preco-atual">R$ 84,68 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Logitech M240 Silent | Branco', 84.67849999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/357163-300-300/a_582699_alta_2.png?v=638412699594300000', '582699')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/361484-300-300/a_582736_alta_1.png?v=638442941085300000" alt="Produto">
+            <div class="codigo">Cód.: 582736</div>
+            <div class="titulo">Mouse Sem Fio Logitech Mx Anywhere 3s Grafite</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 548,06 por</div>
+                <div class="preco-atual">R$ 495,57 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Logitech Mx Anywhere 3s Grafite', 495.5703, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/361484-300-300/a_582736_alta_1.png?v=638442941085300000', '582736')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/407015-300-300/a_582854_alta_1.jpg?v=638675361667200000" alt="Produto">
+            <div class="codigo">Cód.: 582854</div>
+            <div class="titulo">Mouse Logitech Sem Fio LIFT, Vertical, Ergonômico | Rosé</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 370,24 por</div>
+                <div class="preco-atual">R$ 335,23 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Logitech Sem Fio LIFT, Vertical, Ergonômico | Rosé', 335.2332, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/407015-300-300/a_582854_alta_1.jpg?v=638675361667200000', '582854')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/396059-300-300/p_56711_alta_1.png?v=638626902747300000" alt="Produto">
+            <div class="codigo">Cód.: 582911</div>
+            <div class="titulo">Mouse Sem Fio Kross, Recarregável 1.600 DPI - KE-M315 | Vermelho</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 58,41 por</div>
+                <div class="preco-atual">R$ 42,67 <span class="pix">no pix</span></div>
+                <div class="desconto">-24% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Kross, Recarregável 1.600 DPI - KE-M315 | Vermelho', 42.6673, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/396059-300-300/p_56711_alta_1.png?v=638626902747300000', '582911')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/357163-300-300/a_582699_alta_2.png?v=638412699594300000" alt="Produto">
+            <div class="codigo">Cód.: 582699</div>
+            <div class="titulo">Mouse Sem Fio Logitech M240 Silent | Branco</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 93,21 por</div>
+                <div class="preco-atual">R$ 84,68 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Logitech M240 Silent | Branco', 84.67849999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/357163-300-300/a_582699_alta_2.png?v=638412699594300000', '582699')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/361484-300-300/a_582736_alta_1.png?v=638442941085300000" alt="Produto">
+            <div class="codigo">Cód.: 582736</div>
+            <div class="titulo">Mouse Sem Fio Logitech Mx Anywhere 3s Grafite</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 548,06 por</div>
+                <div class="preco-atual">R$ 495,57 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Logitech Mx Anywhere 3s Grafite', 495.5703, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/361484-300-300/a_582736_alta_1.png?v=638442941085300000', '582736')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/350639-300-300/a_582558_alta_1.png?v=638387881290400000" alt="Produto">
+            <div class="codigo">Cód.: 582558</div>
+            <div class="titulo">Mouse Logitech M110 Silent Cliques Silenciosos | Azul</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 58,00 por</div>
+                <div class="preco-atual">R$ 52,88 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Logitech M110 Silent Cliques Silenciosos | Azul', 52.8797, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/350639-300-300/a_582558_alta_1.png?v=638387881290400000', '582558')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/407015-300-300/a_582854_alta_1.jpg?v=638675361667200000" alt="Produto">
+            <div class="codigo">Cód.: 582854</div>
+            <div class="titulo">Mouse Logitech Sem Fio LIFT, Vertical, Ergonômico | Rosé</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 370,24 por</div>
+                <div class="preco-atual">R$ 335,23 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Logitech Sem Fio LIFT, Vertical, Ergonômico | Rosé', 335.2332, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/407015-300-300/a_582854_alta_1.jpg?v=638675361667200000', '582854')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/343568-300-300/a_581604_alta_1.png?v=638367080972800000" alt="Produto">
+            <div class="codigo">Cód.: 581604</div>
+            <div class="titulo">Combo Logitech Teclado e Mouse Slim MK470 Sem Fio</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 326,41 por</div>
+                <div class="preco-atual">R$ 295,40 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Combo Logitech Teclado e Mouse Slim MK470 Sem Fio', 295.4, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/343568-300-300/a_581604_alta_1.png?v=638367080972800000', '581604')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/404609-300-300/a_582912_alta_1.jpg?v=638658894535430000" alt="Produto">
+            <div class="codigo">Cód.: 582912</div>
+            <div class="titulo">Mouse Logitech sem fio Signature M650 | Rosé</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 218,70 por</div>
+                <div class="preco-atual">R$ 198,08 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Logitech sem fio Signature M650 | Rosé', 198.07969999999997, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/404609-300-300/a_582912_alta_1.jpg?v=638658894535430000', '582912')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/331537-300-300/a_581907_alta_1.png?v=638324815337000000" alt="Produto">
+            <div class="codigo">Cód.: 581907</div>
+            <div class="titulo">Mouse Sem Fio Logitech M190 Cinza / Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 78,53 por</div>
+                <div class="preco-atual">R$ 71,42 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Logitech M190 Cinza / Preto', 71.4169, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/331537-300-300/a_581907_alta_1.png?v=638324815337000000', '581907')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/404580-300-300/a_582916_alta_1.jpg?v=638658894452530000" alt="Produto">
+            <div class="codigo">Cód.: 582916</div>
+            <div class="titulo">Mouse Gamer Sem Fio Logitech G PRO X SUPERLIGHT | Red</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 869,30 por</div>
+                <div class="preco-atual">R$ 786,36 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Gamer Sem Fio Logitech G PRO X SUPERLIGHT | Red', 786.3575, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/404580-300-300/a_582916_alta_1.jpg?v=638658894452530000', '582916')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/392898-300-300/p_59558_alta_1.png?v=638614190356870000" alt="Produto">
+            <div class="codigo">Cód.: 582900</div>
+            <div class="titulo">Combo Acer Teclado + Mouse Office Com Cabo - OCC300</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 104,07 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Combo Acer Teclado + Mouse Office Com Cabo - OCC300', 104.0748, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/392898-300-300/p_59558_alta_1.png?v=638614190356870000', '582900')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/376230-300-300/p_59081_alta_1.jpg?v=638529564502000000" alt="Produto">
+            <div class="codigo">Cód.: 582807</div>
+            <div class="titulo">Mouse Pad Gamer Extra Grande Logitech G840</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 283,17 por</div>
+                <div class="preco-atual">R$ 249,96 <span class="pix">no pix</span></div>
+                <div class="desconto">-5% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Pad Gamer Extra Grande Logitech G840', 249.9645, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/376230-300-300/p_59081_alta_1.jpg?v=638529564502000000', '582807')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/244313-300-300/a_582404_alta_1.png?v=637844154428200000" alt="Produto">
+            <div class="codigo">Cód.: 582404</div>
+            <div class="titulo">Mouse Logitech sem fio Singnature M650L | Branco</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 230,65 por</div>
+                <div class="preco-atual">R$ 202,68 <span class="pix">no pix</span></div>
+                <div class="desconto">-6% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Logitech sem fio Singnature M650L | Branco', 202.6777, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/244313-300-300/a_582404_alta_1.png?v=637844154428200000', '582404')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/384009-300-300/a_581269_alta_1.jpg?v=638563161749500000" alt="Produto">
+            <div class="codigo">Cód.: 581269</div>
+            <div class="titulo">Mouse Sem Fio Logitech M170 | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 67,64 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Logitech M170 | Preto', 67.6417, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/384009-300-300/a_581269_alta_1.jpg?v=638563161749500000', '581269')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/349934-300-300/a_580934_alta_4.png?v=638387858819730000" alt="Produto">
+            <div class="codigo">Cód.: 580934</div>
+            <div class="titulo">Mouse Sem Fio Logitech M280 Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 102,88 por</div>
+                <div class="preco-atual">R$ 94,10 <span class="pix">no pix</span></div>
+                <div class="desconto">-2% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Logitech M280 Preto', 94.1044, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/349934-300-300/a_580934_alta_4.png?v=638387858819730000', '580934')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/398979-300-300/p_59574_alta_1.jpg?v=638634909622730000" alt="Produto">
+            <div class="codigo">Cód.: 582905</div>
+            <div class="titulo">Mouse Gamer Acer Predator Cestus 315 | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 318,97 por</div>
+                <div class="preco-atual">R$ 267,09 <span class="pix">no pix</span></div>
+                <div class="desconto">-10% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Gamer Acer Predator Cestus 315 | Preto', 267.086, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/398979-300-300/p_59574_alta_1.jpg?v=638634909622730000', '582905')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/349054-300-300/a_582700_alta_3.png?v=638384340107870000" alt="Produto">
+            <div class="codigo">Cód.: 582700</div>
+            <div class="titulo">Mouse Sem Fio Logitech M240 Silent | Rose</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 93,29 por</div>
+                <div class="preco-atual">R$ 85,11 <span class="pix">no pix</span></div>
+                <div class="desconto">-2% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Logitech M240 Silent | Rose', 85.1141, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/349054-300-300/a_582700_alta_3.png?v=638384340107870000', '582700')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/384027-300-300/a_581270_alta_1.png?v=638563161884070000" alt="Produto">
+            <div class="codigo">Cód.: 581270</div>
+            <div class="titulo">Mouse Sem Fio Logitech M170 | Vermelho</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 72,63 por</div>
+                <div class="preco-atual">R$ 66,12 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Sem Fio Logitech M170 | Vermelho', 66.1171, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/384027-300-300/a_581270_alta_1.png?v=638563161884070000', '581270')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/416401-300-300/a_582952_alta_1.jpg?v=638769531922600000" alt="Produto">
+            <div class="codigo">Cód.: 582952</div>
+            <div class="titulo">Mouse Logitech Sem Fio LIFT LEFT, Vertical, Ergonômico, 4000 DPI</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 380,93 por</div>
+                <div class="preco-atual">R$ 334,87 <span class="pix">no pix</span></div>
+                <div class="desconto">-6% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Logitech Sem Fio LIFT LEFT, Vertical, Ergonômico, 4000 DPI', 334.8702, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/416401-300-300/a_582952_alta_1.jpg?v=638769531922600000', '582952')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/174220-300-300/a_581619_alta_3.png?v=637316501697370000" alt="Produto">
+            <div class="codigo">Cód.: 581619</div>
+            <div class="titulo">Mouse Logitech G203 LIGHTSYNC RGB para jogos de 6 botões, 200 - 8.000 DPI Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 193,48 por</div>
+                <div class="preco-atual">R$ 175,30 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Logitech G203 LIGHTSYNC RGB para jogos de 6 botões, 200 - 8.000 DPI Preto', 175.2954, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/174220-300-300/a_581619_alta_3.png?v=637316501697370000', '581619')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/170158-300-300/p_50668_alta_4.png?v=637178906075770000" alt="Produto">
+            <div class="codigo">Cód.: 581911</div>
+            <div class="titulo">Mouse Logitech G502 RGB Gamer</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 395,48 por</div>
+                <div class="preco-atual">R$ 359,30 <span class="pix">no pix</span></div>
+                <div class="desconto">-2% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Logitech G502 RGB Gamer', 359.3001, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/170158-300-300/p_50668_alta_4.png?v=637178906075770000', '581911')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/168999-300-300/p_50665_alta_4.png?v=637141119297830000" alt="Produto">
+            <div class="codigo">Cód.: 581643</div>
+            <div class="titulo">Mouse Logitech G403 Hero Gamer</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 295,96 por</div>
+                <div class="preco-atual">R$ 267,41 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Logitech G403 Hero Gamer', 267.4127, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/168999-300-300/p_50665_alta_4.png?v=637141119297830000', '581643')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/390629-300-300/p_59379_alta_1.jpg?v=638607288766100000" alt="Produto">
+            <div class="codigo">Cód.: 582849</div>
+            <div class="titulo">Mouse Pad Kross Elegance com Apoio em Gel para o Pulso - KE-CBS0121 | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 30,18 por</div>
+                <div class="preco-atual">R$ 25,05 <span class="pix">no pix</span></div>
+                <div class="desconto">-14% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Mouse Pad Kross Elegance com Apoio em Gel para o Pulso - KE-CBS0121 | Preto', 25.0497, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/390629-300-300/p_59379_alta_1.jpg?v=638607288766100000', '582849')">Adicionar ao Carrinho</button>        </div>
+
+    </div>
+
+    <script>
+        // ====== CARRINHO ======
+        let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+
+        function salvarCarrinho() {
+            localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        }
+
+        function atualizarContador() {
+            const count = carrinho.reduce((acc, item) => acc + item.qtd, 0);
+            document.getElementById('cart-count').textContent = count;
+        }
+
+        function animarCarrinho() {
+            const icon = document.getElementById('cart-icon');
+            icon.classList.add('bounce');
+            setTimeout(() => icon.classList.remove('bounce'), 400);
+        }
+
+      /*  function adicionarCarrinho(titulo, preco, imagem) {
+            const item = carrinho.find(p => p.titulo === titulo);
+            if (item) {
+                item.qtd += 1;
+            } else {
+                carrinho.push({ titulo, preco, imagem, qtd: 1 });
+            }
+            salvarCarrinho();
+            atualizarContador();
+            animarCarrinho();
+            atualizarDropdown();
+        }*/
+
+        function adicionarCarrinho(titulo, preco, imagem, codigo = '') {
+            const item = carrinho.find(p => (codigo ? p.codigo === codigo : p.titulo === titulo));
+            if (item) {
+                item.qtd += 1;
+            } else {
+                carrinho.push({ titulo, preco, imagem, codigo, qtd: 1 });
+            }
+            salvarCarrinho();
+            atualizarContador();
+            animarCarrinho();
+            atualizarDropdown();
+        }
+
+        function alterarQtd(index, valor) {
+            carrinho[index].qtd += valor;
+            if (carrinho[index].qtd <= 0) {
+                carrinho.splice(index, 1);
+            }
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+        function removerProduto(index) {
+            carrinho.splice(index, 1);
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+        function atualizarDropdown() {
+            const container = document.getElementById('cart-items');
+            container.innerHTML = '';
+            let total = 0;
+
+            carrinho.forEach((item, index) => {
+                total += item.preco * item.qtd;
+                container.innerHTML += `
+                    <div class="cart-item">
+                        <img src="${item.imagem}" alt="${item.titulo}">
+                        <div class="cart-item-info">
+                            <div class="codigo">${item.codigo ? item.codigo : ''}</div>
+                            <div>${item.titulo}</div>
+                            <div class="cart-controls">
+                                <button onclick="alterarQtd(${index}, -1)">-</button>
+                                <input type="number" min="0" value="${item.qtd}" onchange="alterarQtdInput(${index}, this.value)" style="width: 50px; text-align: center; font-size:16px;">
+                                <button onclick="alterarQtd(${index}, 1)">+</button>
+                                <button class="remove-btn" onclick="removerProduto(${index})">🗑️</button>
+                            </div>
+                            <div>${(item.preco * item.qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('cart-total').textContent =`Total: R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function alterarQtdInput(index, valor) {
+            valor = parseInt(valor);
+            if (isNaN(valor) || valor < 0) valor = 0;
+
+            if (valor === 0) {
+                carrinho.splice(index, 1); // remove se 0
+            } else {
+                carrinho[index].qtd = valor;
+            }
+
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+
+        function toggleCarrinho() {
+            const drop = document.getElementById('cart-dropdown');
+            const isOpen = getComputedStyle(drop).display !== 'none';
+            drop.style.display = isOpen ? 'none' : 'flex';
+        }
+
+        // ====== CONTROLE DE ABRIR/FECHAR ======
+        // Não fechar ao clicar dentro do menu
+        document.getElementById('cart-dropdown').addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+
+        // IMPORTANTE: como já existe onclick="toggleCarrinho()" no HTML,
+        // aqui só paramos a propagação para não disparar o listener do documento.
+        document.getElementById('cart-icon').addEventListener('click', function (e) {
+            e.stopPropagation();
+            // não chama toggleCarrinho() aqui para evitar duplo toggle
+        });
+
+        // Fecha apenas se clicar fora do ícone e do menu
+        document.addEventListener('click', function (event) {
+            const drop = document.getElementById('cart-dropdown');
+            const icon = document.getElementById('cart-icon');
+            if (!drop.contains(event.target) && !icon.contains(event.target)) {
+                drop.style.display = 'none';
+            }
+        });
+
+        
+      /*  function finalizarCompra() {
+            alert('Compra finalizada!');
+            carrinho = [];
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+            document.getElementById('cart-dropdown').style.display = 'none';
+        }*/
+
+function mostrarSucesso(mensagem) {
+    let aviso = document.createElement('div');
+    aviso.className = 'sucesso-tooltip';
+    aviso.textContent = mensagem;
+    document.body.appendChild(aviso);
+
+    // Exibir com animação
+    setTimeout(() => aviso.classList.add('show'), 10);
+
+    // Remover após 3,5s
+    setTimeout(() => {
+        aviso.classList.remove('show');
+        setTimeout(() => aviso.remove(), 400); // esperar terminar animação
+    }, 3500);
+}
+
+    function finalizarCompra() {
+        let total = carrinho.reduce((acc, item) => acc + item.preco * item.qtd, 0);
+        const botao = document.querySelector('.finalizar');
+
+        // Remove tooltip antiga se existir
+        let oldTooltip = document.querySelector('.finalizar-tooltip');
+        if (oldTooltip) oldTooltip.remove();
+
+        if (total < 500) {
+            // Criar tooltip para valor mínimo
+            let tooltip = document.createElement('div');
+            tooltip.classList.add('finalizar-tooltip');
+            tooltip.textContent = 'O valor mínimo para finalizar a compra é R$500,00';
+            botao.appendChild(tooltip);
+
+            setTimeout(() => tooltip.classList.add('show'), 10);
+            setTimeout(() => tooltip.classList.remove('show'), 3500);
+            setTimeout(() => tooltip.remove(), 3500);
+            return;
+        }
+
+        // Enviar pedido para o Flask
+        fetch('http://127.0.0.1:5000/finalizar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ total: total, itens: carrinho })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Mostrar sucesso usando sua função CSS
+            mostrarSucesso(`Pedido enviado com sucesso! ID: ${data.pedido_id}`);
+
+            // Limpar carrinho e atualizar
+            carrinho = [];
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+            document.getElementById('cart-dropdown').style.display = 'none';
+        })
+        .catch(err => {
+            let erroTooltip = document.createElement('div');
+            erroTooltip.classList.add('finalizar-tooltip');
+            erroTooltip.textContent = 'Erro ao enviar pedido. Tente novamente!';
+            botao.appendChild(erroTooltip);
+
+            setTimeout(() => erroTooltip.classList.add('show'), 10);
+            setTimeout(() => erroTooltip.classList.remove('show'), 3500);
+            setTimeout(() => erroTooltip.remove(), 3500);
+
+            console.error('Erro ao enviar pedido:', err);
+        });
+    }
+  
+        // Inicialização
+        atualizarContador();
+        atualizarDropdown();
+    </script>
+</body>
+</html>
