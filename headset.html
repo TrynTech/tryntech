@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Headset</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f4f6f8;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        h1 {
+            color: #000;
+            text-transform: uppercase;
+            margin: 0;    
+        }
+
+        .titulo_nome {
+        font-family: 'Story_Script';
+        font-size: 35px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin: 0;
+        }
+
+        .titulo_nome a {
+        text-decoration: none;
+        background: linear-gradient(270deg, #050c4e, #012b30, #01162e, #021d1b, #020f33);
+        background-size: 600% 600%;
+        -webkit-background-clip:text;
+        -webkit-text-fill-color: transparent;
+        animation: gradientShift 12s ease infinite;
+        transition: text-shadow 0.5s;
+        display: inline-block;
+        }
+
+        @keyframes gradientShift {
+        0% { background-position: 0% 50%; }  
+        50% { background-position: 100% 50%; }  
+        100% { background-position: 0% 50%; }  
+        }        
+
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0; /* garante que ocupe até o fim */
+            width: 100%;
+            background: #fff;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            z-index: 1000;
+            flex-wrap: wrap;
+            gap: 10px;
+            box-sizing: border-box; /* impede que padding estoure a largura */
+        }
+
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 24px;
+            margin-right: 10px;
+            margin-top: 8px;
+        }
+
+        .cart-icon img {
+            width: 34px;
+            transition: transform 0.2s ease;
+        }
+
+        .cart-icon.bounce img {
+            transform: scale(1.3);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            background: red;
+            color: white;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* Dropdown do carrinho */
+        .cart-dropdown {
+            display: none;                 /* começa oculto */
+            position: fixed;
+            top: 60px;                     /* logo abaixo do header */
+            right: 0;
+            width: 400px;
+            height: calc(100vh - 60px);    /* altura total visível */
+            background: white;
+            border-radius: 8px 0 0 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            padding: 10px;
+            z-index: 2000;
+            /* quando abrir via JS, usaremos display:flex */
+            flex-direction: column;
+        }
+
+        #cart-items {
+            overflow-y: auto;      /* rolagem só aqui */
+            flex: 1;               /* ocupa o espaço disponível */
+            display: block;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .cart-item img {
+            width: 90px;
+            height: 90%;
+            object-fit: contain;
+        }
+        .cart-item-info {
+            flex: 1;
+            font-size: 13px;
+        }
+        .cart-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .cart-controls button {
+            border: none;
+            background: #ddd;
+            padding: 4px 8px; 
+            cursor: pointer;
+            font-size: 15px; /*aumenta o tamanho do + - e da lixeira*/
+            border-radius: 4px;
+        }
+        .remove-btn {
+            background: red;
+            color: white;
+        }
+        .cart-total {
+           font-weight: bold;
+            margin-top: 10px;
+            text-align: right;
+
+            position: sticky;   /* fixa dentro do scroller */
+            bottom: 52px;       /* espaço para o botão (ajusto dinamicamente no JS também) */
+            background: white;
+            padding: 8px 0;
+            z-index: 1;
+        }
+        .cart-dropdown button.finalizar {
+            flex-shrink: 0;
+            width: 100%;
+            padding: 12px;      /* um pouco mais alto */
+            background: #0aa030;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+            font-weight: bold;
+
+            position: sticky;   /* fica colado no fundo do scroller */
+            bottom: 12px;
+            z-index: 2;
+        }
+
+                        /* Tooltip de aviso do botão finalizar */
+        .finalizar-tooltip {
+            position: absolute;
+            background: #ff4d4f;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            top: -58px;       /* acima do botão */
+            left: 0;
+            opacity: 0;
+            transform: translateY(0);
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            white-space: nowrap;
+            z-index: 3000;
+        }
+        .finalizar-tooltip.show {
+            opacity: 1;
+            transform: translateY(-10px);
+        }
+
+        .sucesso-tooltip {
+            position: fixed;
+            background: #0aa030;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            top: 18%; 
+            left: 50%; 
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            z-index: 4000;
+            white-space: nowrap;
+        }
+
+        .sucesso-tooltip.show {
+            opacity: 1;
+            transform: translate(-50%, -20%);
+        }
+
+                        /* Remove setas do input number */
+        .cart-controls input[type="number"]::-webkit-outer-spin-button,
+        .cart-controls input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .cart-controls input[type="number"] {
+            font-size: 16px;
+            width: 50px;
+            text-align: center;
+            border-radius: 6px;
+            border: 1px solid #bbb;
+            padding: 4px 6px;
+            background-color: #f9f9f9;
+            font-family: 'Arial', sans-serif; /* você pode trocar para outra fonte bonita */
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+
+        .cart-controls input[type="number"]:focus {
+            outline: none;
+            border-color: #0a9b43;
+            box-shadow: 0 0 4px #0a9b43;
+        }
+
+        .produto {
+            background: #fff;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            width: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s;
+        }
+
+        .produto:hover {
+            transform: translateY(-5px);
+        }
+
+        .produto img {
+            width: 100%;
+            border-bottom: 1px solid rgb(114, 107, 107);
+            object-fit: contain;
+            background: #f0f0f0;
+        }
+
+        .codigo {
+            font-size: 13px;
+            color: #555;
+            margin-top: 8px;
+        }
+
+        .titulo {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 7px 0 12px 0;
+            color: #202020;
+            height: auto;
+        }
+
+        .precos {
+            text-align: right;
+            margin-top: auto;
+        }
+
+        .preco-atual {
+            color: #0a9b43;
+            font-weight: bold;
+            font-size: 21px;
+        }
+
+        .preco-antigo {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .desconto {
+            color: #1bbf00;
+            background-color: #e6ffe6;
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .pix {
+            font-size: 13px;
+            color: #777;
+        }
+
+        .add-btn {
+            margin-top: 10px;
+            padding: 8px;
+            background: #0a9b43;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .add-btn:hover {
+            background: #0d7e39;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 class="titulo_nome"><a href="main.html">🛒 Headset</a></h1>
+        <div class="cart-icon" onclick="toggleCarrinho()" id="cart-icon">
+            <img src="https://cdn-icons-png.flaticon.com/512/1170/1170678.png" alt="Carrinho">
+            <div class="cart-count" id="cart-count">0</div>
+
+            <div class="cart-dropdown" id="cart-dropdown">
+                <div id="cart-items"></div>
+                <div class="cart-total" id="cart-total">Total: R$ 0,00</div>
+                <button class="finalizar" onclick="finalizarCompra()">Finalizar</button>
+            </div>
+        </div>
+    </header>
+
+    <div style="margin-top:80px; display:flex; flex-wrap:wrap; justify-content:center; width:100%;">
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/434929-300-300/p_60590_alta_1.jpg?v=638845482926700000" alt="Produto">
+            <div class="codigo">Cód.: 285157</div>
+            <div class="titulo">Headset HP DHE-8003U Gamer USB 7.1, RGB Dinâmico, Cancelamento de Ruido, frequência 20 Hz - cabo 2 Metros.</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 139,93 por</div>
+                <div class="preco-atual">R$ 128,48 <span class="pix">no pix</span></div>
+                <div class="desconto">-2% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset HP DHE-8003U Gamer USB 7.1, RGB Dinâmico, Cancelamento de Ruido, frequência 20 Hz - cabo 2 Metros.', 128.4805, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/434929-300-300/p_60590_alta_1.jpg?v=638845482926700000', '285157')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/390949-300-300/p_59367_alta_1.jpg?v=638607291256870000" alt="Produto">
+            <div class="codigo">Cód.: 285048</div>
+            <div class="titulo">Headset Gamer HAVIT H2232D, RGB, Microfone Flexível | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 80,43 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Gamer HAVIT H2232D, RGB, Microfone Flexível | Preto', 80.4314, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/390949-300-300/p_59367_alta_1.jpg?v=638607291256870000', '285048')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/391088-300-300/a_285053_alta_1.jpg?v=638607292309900000" alt="Produto">
+            <div class="codigo">Cód.: 285053</div>
+            <div class="titulo">Headset Gamer HAVIT H2230D, Microfone destacável | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 101,50 por</div>
+                <div class="preco-atual">R$ 81,46 <span class="pix">no pix</span></div>
+                <div class="desconto">-15% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Gamer HAVIT H2230D, Microfone destacável | Preto', 81.45989999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/391088-300-300/a_285053_alta_1.jpg?v=638607292309900000', '285053')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/341490-300-300/p_57801_alta_1.png?v=638355881147030000" alt="Produto">
+            <div class="codigo">Cód.: 582656</div>
+            <div class="titulo">Headset Gamer HP, Conexão P2 - DHE-8001 | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 76,43 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Gamer HP, Conexão P2 - DHE-8001 | Preto', 76.4263, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/341490-300-300/p_57801_alta_1.png?v=638355881147030000', '582656')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/407803-300-300/a_285082_alta_1.jpg?v=638679853787400000" alt="Produto">
+            <div class="codigo">Cód.: 285082</div>
+            <div class="titulo">Headset Gamer HAVIT H2042D, RGB, Driver 50mm, USB e P2 | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 88,31 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Gamer HAVIT H2042D, RGB, Driver 50mm, USB e P2 | Preto', 88.3085, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/407803-300-300/a_285082_alta_1.jpg?v=638679853787400000', '285082')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/391015-300-300/a_285052_alta_1.jpg?v=638607291756100000" alt="Produto">
+            <div class="codigo">Cód.: 285052</div>
+            <div class="titulo">Headset Gamer HAVIT H2230D, Microfone destacável | Branco/Cinza</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 91,76 por</div>
+                <div class="preco-atual">R$ 81,50 <span class="pix">no pix</span></div>
+                <div class="desconto">-5% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Gamer HAVIT H2230D, Microfone destacável | Branco/Cinza', 81.4962, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/391015-300-300/a_285052_alta_1.jpg?v=638607291756100000', '285052')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/391076-300-300/p_59368_alta_1.jpg?v=638607292220170000" alt="Produto">
+            <div class="codigo">Cód.: 285054</div>
+            <div class="titulo">Headset Gamer HAVIT H2230U, Microfone Removível | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 106,14 por</div>
+                <div class="preco-atual">R$ 94,59 <span class="pix">no pix</span></div>
+                <div class="desconto">-5% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Gamer HAVIT H2230U, Microfone Removível | Preto', 94.58840000000001, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/391076-300-300/p_59368_alta_1.jpg?v=638607292220170000', '285054')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/439354-300-300/p_60013_alta_1.jpg?v=638871710641600000" alt="Produto">
+            <div class="codigo">Cód.: 582939</div>
+            <div class="titulo">Kit Gamer Kross Elegance KE-GK4100 4 em 1, Teclado, Mousepad, Headset e Mouse 6 botões 2400DPI | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 139,39 por</div>
+                <div class="preco-atual">R$ 114,43 <span class="pix">no pix</span></div>
+                <div class="desconto">-12% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Kit Gamer Kross Elegance KE-GK4100 4 em 1, Teclado, Mousepad, Headset e Mouse 6 botões 2400DPI | Preto', 114.43239999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/439354-300-300/p_60013_alta_1.jpg?v=638871710641600000', '582939')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/404851-300-300/p_59784_alta_1.jpg?v=638660574143970000" alt="Produto">
+            <div class="codigo">Cód.: 285090</div>
+            <div class="titulo">Headset JBL Quantum 100 M2 Gamer | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 215,36 por</div>
+                <div class="preco-atual">R$ 181,06 <span class="pix">no pix</span></div>
+                <div class="desconto">-10% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset JBL Quantum 100 M2 Gamer | Preto', 181.055, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/404851-300-300/p_59784_alta_1.jpg?v=638660574143970000', '285090')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/431836-300-300/p_60009_alta_14.jpg?v=638832596037330000" alt="Produto">
+            <div class="codigo">Cód.: 285115</div>
+            <div class="titulo">Headset Kross USB para Call Center, Microfone com cancelamento de Ruídos, KE-HS060</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 120,60 por</div>
+                <div class="preco-atual">R$ 94,82 <span class="pix">no pix</span></div>
+                <div class="desconto">-16% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Kross USB para Call Center, Microfone com cancelamento de Ruídos, KE-HS060', 94.81830000000001, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/431836-300-300/p_60009_alta_14.jpg?v=638832596037330000', '285115')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/331197-300-300/p_58097_alta_1.png?v=638323889947000000" alt="Produto">
+            <div class="codigo">Cód.: 285001</div>
+            <div class="titulo">Headset Gamer HP, Conexão USB - DHE-8001U | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 81,82 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Gamer HP, Conexão USB - DHE-8001U | Preto', 81.8229, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/331197-300-300/p_58097_alta_1.png?v=638323889947000000', '285001')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/304818-300-300/a_582160_alta_1.png?v=638201048157000000" alt="Produto">
+            <div class="codigo">Cód.: 582160</div>
+            <div class="titulo">Headset Logitech USB H390 Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 213,56 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Logitech USB H390 Preto', 213.5556, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/304818-300-300/a_582160_alta_1.png?v=638201048157000000', '582160')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/444146-300-300/a_285146_alta_1.jpg?v=638895863055000000" alt="Produto">
+            <div class="codigo">Cód.: 285146</div>
+            <div class="titulo">Headset HAVIT FUXI-H5D, 3.5MM, Drivers de 50MM. White / Black</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 91,15 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset HAVIT FUXI-H5D, 3.5MM, Drivers de 50MM. White / Black', 91.152, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/444146-300-300/a_285146_alta_1.jpg?v=638895863055000000', '285146')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/394488-300-300/a_285080_alta_1.jpg?v=638619297917270000" alt="Produto">
+            <div class="codigo">Cód.: 285080</div>
+            <div class="titulo">Headset Gamer HAVIT H2230U, Microfone Removível | White</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 107,18 por</div>
+                <div class="preco-atual">R$ 95,54 <span class="pix">no pix</span></div>
+                <div class="desconto">-5% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Gamer HAVIT H2230U, Microfone Removível | White', 95.54429999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/394488-300-300/a_285080_alta_1.jpg?v=638619297917270000', '285080')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/416239-300-300/p_59535_alta_1.jpg?v=638733442628930000" alt="Produto">
+            <div class="codigo">Cód.: 285070</div>
+            <div class="titulo">Headset HP DHE-8010M, Drivers 50mm, USB e P2, Microfone Dobrável | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 80,62 por</div>
+                <div class="preco-atual">R$ 75,17 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset HP DHE-8010M, Drivers 50mm, USB e P2, Microfone Dobrável | Preto', 75.1679, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/416239-300-300/p_59535_alta_1.jpg?v=638733442628930000', '285070')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/442994-300-300/a_285145_alta_6.jpg?v=638892511717630000" alt="Produto">
+            <div class="codigo">Cód.: 285145</div>
+            <div class="titulo">Headset HAVIT FUXI-H5D, 3.5MM, Drivers de 50MM. Black</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 97,64 por</div>
+                <div class="preco-atual">R$ 87,68 <span class="pix">no pix</span></div>
+                <div class="desconto">-4% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset HAVIT FUXI-H5D, 3.5MM, Drivers de 50MM. Black', 87.6793, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/442994-300-300/a_285145_alta_6.jpg?v=638892511717630000', '285145')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/391044-300-300/p_59366_alta_1.jpg?v=638607291990870000" alt="Produto">
+            <div class="codigo">Cód.: 285057</div>
+            <div class="titulo">Headset Gamer HAVIT H2015E, Microfone destacável | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 167,12 por</div>
+                <div class="preco-atual">R$ 150,94 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Gamer HAVIT H2015E, Microfone destacável | Preto', 150.9381, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/391044-300-300/p_59366_alta_1.jpg?v=638607291990870000', '285057')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/415255-300-300/a_285123_alta_1.jpg?v=638735983800700000" alt="Produto">
+            <div class="codigo">Cód.: 285123</div>
+            <div class="titulo">Headset JBL Quantum 100 M2 Gamer | Ciano</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 217,19 por</div>
+                <div class="preco-atual">R$ 181,06 <span class="pix">no pix</span></div>
+                <div class="desconto">-11% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset JBL Quantum 100 M2 Gamer | Ciano', 181.055, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/415255-300-300/a_285123_alta_1.jpg?v=638735983800700000', '285123')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/416241-300-300/p_59534_alta_1.jpg?v=638733442630330000" alt="Produto">
+            <div class="codigo">Cód.: 285069</div>
+            <div class="titulo">Headset HP DHE-8010U, Drivers 50mm, USB, Microfone Dobrável | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 104,53 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset HP DHE-8010U, Drivers 50mm, USB, Microfone Dobrável | Preto', 104.5346, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/416241-300-300/p_59534_alta_1.jpg?v=638733442630330000', '285069')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/271861-300-300/a_582488_alta_1.png?v=638030823767170000" alt="Produto">
+            <div class="codigo">Cód.: 582488</div>
+            <div class="titulo">Headset Sem Fio Sony Pulse 3D Para PS4 e PS5 | Midnight Black</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 643,05 por</div>
+                <div class="preco-atual">R$ 558,31 <span class="pix">no pix</span></div>
+                <div class="desconto">-7% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Sem Fio Sony Pulse 3D Para PS4 e PS5 | Midnight Black', 558.3087999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/271861-300-300/a_582488_alta_1.png?v=638030823767170000', '582488')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/293035-300-300/p_57409_alta_1.png?v=638161144539330000" alt="Produto">
+            <div class="codigo">Cód.: 582577</div>
+            <div class="titulo">Headset Gamer Redragon Diomedes H388 | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 293,22 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Gamer Redragon Diomedes H388 | Preto', 293.222, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/293035-300-300/p_57409_alta_1.png?v=638161144539330000', '582577')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/274175-300-300/p_56903_alta_1.png?v=638050085941630000" alt="Produto">
+            <div class="codigo">Cód.: 582499</div>
+            <div class="titulo">Headset Gamer Sem Fio Logitech G435 | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 666,26 por</div>
+                <div class="preco-atual">R$ 602,81 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Gamer Sem Fio Logitech G435 | Preto', 602.8126, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/274175-300-300/p_56903_alta_1.png?v=638050085941630000', '582499')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/398866-300-300/a_285087_alta_1.jpg?v=638634093840930000" alt="Produto">
+            <div class="codigo">Cód.: 285087</div>
+            <div class="titulo">Headset Gamer HAVIT H2038U, RGB, Driver 50mm, USB | Branco/Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 152,43 por</div>
+                <div class="preco-atual">R$ 137,57 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Gamer HAVIT H2038U, RGB, Driver 50mm, USB | Branco/Preto', 137.5676, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/398866-300-300/a_285087_alta_1.jpg?v=638634093840930000', '285087')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/398970-300-300/p_59557_alta_2.jpg?v=638634908842900000" alt="Produto">
+            <div class="codigo">Cód.: 285075</div>
+            <div class="titulo">Headset Acer OHW303, Compatível com PC, Driver 50mm, P3 - ZL.HDSCC.020 | Preto/Cinza</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 155,34 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Acer OHW303, Compatível com PC, Driver 50mm, P3 - ZL.HDSCC.020 | Preto/Cinza', 155.3425, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/398970-300-300/p_59557_alta_2.jpg?v=638634908842900000', '285075')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/322500-300-300/a_582671_alta_1.png?v=638271106138500000" alt="Produto">
+            <div class="codigo">Cód.: 582671</div>
+            <div class="titulo">Headset Sem Fio Logitech Zone Vibe 100, Drivers 40 mm, Bluetooth | Grafite</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 632,64 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Sem Fio Logitech Zone Vibe 100, Drivers 40 mm, Bluetooth | Grafite', 632.6391, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/322500-300-300/a_582671_alta_1.png?v=638271106138500000', '582671')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/386286-300-300/a_285058_alta_1.jpg?v=638576876997570000" alt="Produto">
+            <div class="codigo">Cód.: 285058</div>
+            <div class="titulo">Headset Gamer Logitech G335, Driver 40mm, Arco Ajustável | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 501,29 por</div>
+                <div class="preco-atual">R$ 453,33 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Gamer Logitech G335, Driver 40mm, Arco Ajustável | Preto', 453.32919999999996, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/386286-300-300/a_285058_alta_1.jpg?v=638576876997570000', '285058')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/330980-300-300/p_50673_alta_2.png?v=638322136889030000" alt="Produto">
+            <div class="codigo">Cód.: 581529</div>
+            <div class="titulo">Headset Logitech H151 Stereo Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 152,09 por</div>
+                <div class="preco-atual">R$ 141,69 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Logitech H151 Stereo Preto', 141.6937, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/330980-300-300/p_50673_alta_2.png?v=638322136889030000', '581529')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/244516-300-300/p_55729_alta_3.png?v=637844160730970000" alt="Produto">
+            <div class="codigo">Cód.: 582386</div>
+            <div class="titulo">Headset HP DHE-8000, Drivers 30mm, USB, Com Microfone Flexível | Black</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 159,87 por</div>
+                <div class="preco-atual">R$ 146,12 <span class="pix">no pix</span></div>
+                <div class="desconto">-2% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset HP DHE-8000, Drivers 30mm, USB, Com Microfone Flexível | Black', 146.1223, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/244516-300-300/p_55729_alta_3.png?v=637844160730970000', '582386')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/394452-300-300/a_285086_alta_1.jpg?v=638619297633730000" alt="Produto">
+            <div class="codigo">Cód.: 285086</div>
+            <div class="titulo">Headset Gamer HAVIT H2002D, Microfone destacável, Cancelamento de Ruído | Vermelho/Branco</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 220,37 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Gamer HAVIT H2002D, Microfone destacável, Cancelamento de Ruído | Vermelho/Branco', 220.3679, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/394452-300-300/a_285086_alta_1.jpg?v=638619297633730000', '285086')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/361577-300-300/a_285008_alta_1.png?v=638445653062100000" alt="Produto">
+            <div class="codigo">Cód.: 285008</div>
+            <div class="titulo">Headset Sem Fio Logitech Zone Vibe 100, Drivers 40 mm, Bluetooth | Rose</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 607,87 por</div>
+                <div class="preco-atual">R$ 550,02 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Sem Fio Logitech Zone Vibe 100, Drivers 40 mm, Bluetooth | Rose', 550.0203, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/361577-300-300/a_285008_alta_1.png?v=638445653062100000', '285008')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/322490-300-300/a_582631_alta_2.png?v=638271106001230000" alt="Produto">
+            <div class="codigo">Cód.: 582631</div>
+            <div class="titulo">Headset Sem Fio Logitech Zone Vibe 100, Drivers 40 mm, Bluetooth | White</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 674,80 por</div>
+                <div class="preco-atual">R$ 592,71 <span class="pix">no pix</span></div>
+                <div class="desconto">-6% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Sem Fio Logitech Zone Vibe 100, Drivers 40 mm, Bluetooth | White', 592.7090999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/322490-300-300/a_582631_alta_2.png?v=638271106001230000', '582631')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/370309-300-300/p_58789_alta_1.jpg?v=638495038684900000" alt="Produto">
+            <div class="codigo">Cód.: 285016</div>
+            <div class="titulo">Headset HP USB 7.1 Gamer, DHE-8008U</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 177,72 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset HP USB 7.1 Gamer, DHE-8008U', 177.71540000000002, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/370309-300-300/p_58789_alta_1.jpg?v=638495038684900000', '285016')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/301862-300-300/p_50689_alta_1.png?v=638200317078600000" alt="Produto">
+            <div class="codigo">Cód.: 581531</div>
+            <div class="titulo">Headset Logitech Pro X 7.1 Gamer</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.008,96 por</div>
+                <div class="preco-atual">R$ 873,22 <span class="pix">no pix</span></div>
+                <div class="desconto">-7% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Logitech Pro X 7.1 Gamer', 873.2234, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/301862-300-300/p_50689_alta_1.png?v=638200317078600000', '581531')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/304552-300-300/p_49930_alta_1.png?v=638201038362030000" alt="Produto">
+            <div class="codigo">Cód.: 581458</div>
+            <div class="titulo">Headset Fone Intelbras CHS55</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 284,78 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Fone Intelbras CHS55', 284.7762, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/304552-300-300/p_49930_alta_1.png?v=638201038362030000', '581458')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/305007-300-300/p_52115_alta_1.png?v=638201104929800000" alt="Produto">
+            <div class="codigo">Cód.: 581617</div>
+            <div class="titulo">Headset Logitech H111 Estéreo, Conector de áudio de 3,5 mm | Cinza</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 103,91 por</div>
+                <div class="preco-atual">R$ 92,19 <span class="pix">no pix</span></div>
+                <div class="desconto">-5% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Headset Logitech H111 Estéreo, Conector de áudio de 3,5 mm | Cinza', 92.1926, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/305007-300-300/p_52115_alta_1.png?v=638201104929800000', '581617')">Adicionar ao Carrinho</button>        </div>
+
+    </div>
+
+    <script>
+        // ====== CARRINHO ======
+        let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+
+        function salvarCarrinho() {
+            localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        }
+
+        function atualizarContador() {
+            const count = carrinho.reduce((acc, item) => acc + item.qtd, 0);
+            document.getElementById('cart-count').textContent = count;
+        }
+
+        function animarCarrinho() {
+            const icon = document.getElementById('cart-icon');
+            icon.classList.add('bounce');
+            setTimeout(() => icon.classList.remove('bounce'), 400);
+        }
+
+      /*  function adicionarCarrinho(titulo, preco, imagem) {
+            const item = carrinho.find(p => p.titulo === titulo);
+            if (item) {
+                item.qtd += 1;
+            } else {
+                carrinho.push({ titulo, preco, imagem, qtd: 1 });
+            }
+            salvarCarrinho();
+            atualizarContador();
+            animarCarrinho();
+            atualizarDropdown();
+        }*/
+
+        function adicionarCarrinho(titulo, preco, imagem, codigo = '') {
+            const item = carrinho.find(p => (codigo ? p.codigo === codigo : p.titulo === titulo));
+            if (item) {
+                item.qtd += 1;
+            } else {
+                carrinho.push({ titulo, preco, imagem, codigo, qtd: 1 });
+            }
+            salvarCarrinho();
+            atualizarContador();
+            animarCarrinho();
+            atualizarDropdown();
+        }
+
+        function alterarQtd(index, valor) {
+            carrinho[index].qtd += valor;
+            if (carrinho[index].qtd <= 0) {
+                carrinho.splice(index, 1);
+            }
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+        function removerProduto(index) {
+            carrinho.splice(index, 1);
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+        function atualizarDropdown() {
+            const container = document.getElementById('cart-items');
+            container.innerHTML = '';
+            let total = 0;
+
+            carrinho.forEach((item, index) => {
+                total += item.preco * item.qtd;
+                container.innerHTML += `
+                    <div class="cart-item">
+                        <img src="${item.imagem}" alt="${item.titulo}">
+                        <div class="cart-item-info">
+                            <div class="codigo">${item.codigo ? item.codigo : ''}</div>
+                            <div>${item.titulo}</div>
+                            <div class="cart-controls">
+                                <button onclick="alterarQtd(${index}, -1)">-</button>
+                                <input type="number" min="0" value="${item.qtd}" onchange="alterarQtdInput(${index}, this.value)" style="width: 50px; text-align: center; font-size:16px;">
+                                <button onclick="alterarQtd(${index}, 1)">+</button>
+                                <button class="remove-btn" onclick="removerProduto(${index})">🗑️</button>
+                            </div>
+                            <div>${(item.preco * item.qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('cart-total').textContent =`Total: R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function alterarQtdInput(index, valor) {
+            valor = parseInt(valor);
+            if (isNaN(valor) || valor < 0) valor = 0;
+
+            if (valor === 0) {
+                carrinho.splice(index, 1); // remove se 0
+            } else {
+                carrinho[index].qtd = valor;
+            }
+
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+
+        function toggleCarrinho() {
+            const drop = document.getElementById('cart-dropdown');
+            const isOpen = getComputedStyle(drop).display !== 'none';
+            drop.style.display = isOpen ? 'none' : 'flex';
+        }
+
+        // ====== CONTROLE DE ABRIR/FECHAR ======
+        // Não fechar ao clicar dentro do menu
+        document.getElementById('cart-dropdown').addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+
+        // IMPORTANTE: como já existe onclick="toggleCarrinho()" no HTML,
+        // aqui só paramos a propagação para não disparar o listener do documento.
+        document.getElementById('cart-icon').addEventListener('click', function (e) {
+            e.stopPropagation();
+            // não chama toggleCarrinho() aqui para evitar duplo toggle
+        });
+
+        // Fecha apenas se clicar fora do ícone e do menu
+        document.addEventListener('click', function (event) {
+            const drop = document.getElementById('cart-dropdown');
+            const icon = document.getElementById('cart-icon');
+            if (!drop.contains(event.target) && !icon.contains(event.target)) {
+                drop.style.display = 'none';
+            }
+        });
+
+        
+      /*  function finalizarCompra() {
+            alert('Compra finalizada!');
+            carrinho = [];
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+            document.getElementById('cart-dropdown').style.display = 'none';
+        }*/
+
+function mostrarSucesso(mensagem) {
+    let aviso = document.createElement('div');
+    aviso.className = 'sucesso-tooltip';
+    aviso.textContent = mensagem;
+    document.body.appendChild(aviso);
+
+    // Exibir com animação
+    setTimeout(() => aviso.classList.add('show'), 10);
+
+    // Remover após 3,5s
+    setTimeout(() => {
+        aviso.classList.remove('show');
+        setTimeout(() => aviso.remove(), 400); // esperar terminar animação
+    }, 3500);
+}
+
+    function finalizarCompra() {
+        let total = carrinho.reduce((acc, item) => acc + item.preco * item.qtd, 0);
+        const botao = document.querySelector('.finalizar');
+
+        // Remove tooltip antiga se existir
+        let oldTooltip = document.querySelector('.finalizar-tooltip');
+        if (oldTooltip) oldTooltip.remove();
+
+        if (total < 500) {
+            // Criar tooltip para valor mínimo
+            let tooltip = document.createElement('div');
+            tooltip.classList.add('finalizar-tooltip');
+            tooltip.textContent = 'O valor mínimo para finalizar a compra é R$500,00';
+            botao.appendChild(tooltip);
+
+            setTimeout(() => tooltip.classList.add('show'), 10);
+            setTimeout(() => tooltip.classList.remove('show'), 3500);
+            setTimeout(() => tooltip.remove(), 3500);
+            return;
+        }
+
+        // Enviar pedido para o Flask
+        fetch('http://127.0.0.1:5000/finalizar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ total: total, itens: carrinho })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Mostrar sucesso usando sua função CSS
+            mostrarSucesso(`Pedido enviado com sucesso! ID: ${data.pedido_id}`);
+
+            // Limpar carrinho e atualizar
+            carrinho = [];
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+            document.getElementById('cart-dropdown').style.display = 'none';
+        })
+        .catch(err => {
+            let erroTooltip = document.createElement('div');
+            erroTooltip.classList.add('finalizar-tooltip');
+            erroTooltip.textContent = 'Erro ao enviar pedido. Tente novamente!';
+            botao.appendChild(erroTooltip);
+
+            setTimeout(() => erroTooltip.classList.add('show'), 10);
+            setTimeout(() => erroTooltip.classList.remove('show'), 3500);
+            setTimeout(() => erroTooltip.remove(), 3500);
+
+            console.error('Erro ao enviar pedido:', err);
+        });
+    }
+  
+        // Inicialização
+        atualizarContador();
+        atualizarDropdown();
+    </script>
+</body>
+</html>
