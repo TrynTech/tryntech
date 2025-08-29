@@ -6,10 +6,7 @@
   <title>Categorias Tryn</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 0;
@@ -26,10 +23,12 @@
       background: linear-gradient(to right, #001F1F, #001430, #002F2F);
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
       z-index: 1000;
-      padding: 10px 20px;
+      
       display: flex;
       justify-content: space-between;
       align-items: center;
+       padding: 0 20px;        /* remove padding vertical */
+       height: 80px;   
     }
 
     .logo-container {
@@ -51,22 +50,198 @@
     .cart-icon {
       position: relative;
       cursor: pointer;
-
+      align-items: center;
+      font-size: 24px;
     }
 
-   .cart-icon img {
-  height: 45px;
-  filter: brightness(0) invert(1);
-  transition: transform 0.2s ease, filter 0.2s ease;
-  cursor: pointer;
-}
+    .cart-icon img {
+      height: 39px;    
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
 
-.cart-icon img:hover {
-  transform: scale(1.1);
-  filter: brightness(0) invert(0.7);
-}
+    .cart-icon:hover .cart_main {
+      transform: scale(1.1) rotate(-10deg); /* efeito no hover */
+      filter: brightness(1.1);
+    }
 
+    .cart-icon.bounce img {
+      transform: scale(1.3);
+    }
 
+    .cart-count {
+      position: absolute;
+      top: -8px;
+      right: -10px;
+      background: red;
+      color: white;
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 50%;
+      min-width: 18px;
+      text-align: center;
+    }
+    
+
+    .cart-dropdown {
+      display: none;
+      position: fixed;
+      top: 60px;
+      right: 0;
+      width: 400px;
+      height: calc(100vh - 60px);
+      background: white;
+      border-radius: 8px 0 0 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      padding: 10px;
+      z-index: 2000;
+      flex-direction: column;
+    }
+
+    #cart-items {
+      overflow-y: auto;
+      flex: 1;
+      display: block;
+    }
+
+    .cart-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+    }
+
+    .cart-item img {
+      width: 90px;
+      height: 90%;
+      object-fit: contain;
+    }
+
+    .cart-item-info {
+      flex: 1;
+      font-size: 13px;
+      color: #000;
+    }
+
+    .cart-controls {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .cart-controls button {
+      border: none;
+      background: #ddd;
+      padding: 4px 8px; 
+      cursor: pointer;
+      font-size: 15px;
+      border-radius: 4px;
+    }
+
+    .remove-btn {
+      background: red;
+      color: white;
+    }
+
+    .cart-total {
+      font-weight: bold;
+      margin-top: 10px;
+      text-align: right;
+      position: sticky;
+      bottom: 52px;
+      background: white;
+      padding: 8px 0;
+      z-index: 1;
+      color: #000;
+    }
+
+    .cart-dropdown button.finalizar {
+      flex-shrink: 0;
+      width: 100%;
+      padding: 12px;
+      background: #0aa030;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 5px;
+      font-weight: bold;
+      position: sticky;
+      bottom: 12px;
+      z-index: 2;
+    }
+
+    .finalizar-tooltip {
+      position: absolute;
+      background: #ff4d4f;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      top: -58px;
+      left: 0;
+      opacity: 0;
+      transform: translateY(0);
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      white-space: nowrap;
+      z-index: 3000;
+    }
+
+    .finalizar-tooltip.show {
+      opacity: 1;
+      transform: translateY(-10px);
+    }
+
+    .sucesso-tooltip {
+      position: fixed;
+      background: #0aa030;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      top: 18%; 
+      left: 50%; 
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      z-index: 4000;
+      white-space: nowrap;
+    }
+
+    .sucesso-tooltip.show {
+      opacity: 1;
+      transform: translate(-50%, -20%);
+    }
+
+    /* Remove setas do input number */
+    .cart-controls input[type="number"]::-webkit-outer-spin-button,
+    .cart-controls input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .cart-controls input[type="number"] {
+      font-size: 16px;
+      width: 50px;
+      text-align: center;
+      border-radius: 6px;
+      border: 1px solid #bbb;
+      padding: 4px 6px;
+      background-color: #f9f9f9;
+      font-family: 'Arial', sans-serif;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+
+    .cart-controls input[type="number"]:focus {
+      outline: none;
+      border-color: #0a9b43;
+      box-shadow: 0 0 4px #0a9b43;
+    }
+
+    /* Restante do seu menu e estilos */
     .main {
       max-width: 1200px;
       margin: 0 auto;
@@ -120,24 +295,11 @@
       box-shadow: 0 0 20px rgba(0, 255, 255, 0.404);
     }
 
-    @media (max-width: 900px) {
-      ul.menu {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
+    @media (max-width: 900px) { ul.menu { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 600px) {
-      ul.menu {
-        grid-template-columns: 1fr;
-      }
-
-      .logo-container span {
-        font-size: 18px;
-      }
-
-      nav.menu-container {
-        padding: 30px 20px;
-      }
+      ul.menu { grid-template-columns: 1fr; }
+      .logo-container span { font-size: 18px; }
+      nav.menu-container { padding: 30px 20px; }
     }
   </style>
 </head>
@@ -148,8 +310,15 @@
       <img src="melhorada 4.svg" alt="Logo TrynTech" />
       <span>Tryn Categorias</span>
     </div>
-    <div class="cart-icon">
-      <img src="cart_main.svg" alt="Carrinho de compras">
+    <div class="cart-icon" onclick="toggleCarrinho()" id="cart-icon">
+      <img class="cart_main" src="cart_main.svg" alt="Carrinho de compras">
+      <div class="cart-count" id="cart-count">0</div>
+
+      <div class="cart-dropdown" id="cart-dropdown">
+        <div id="cart-items"></div>
+        <div class="cart-total" id="cart-total">Total: R$ 0,00</div>
+        <button class="finalizar" onclick="finalizarCompra()">Finalizar</button>
+      </div>
     </div>
   </header>
 
@@ -178,5 +347,224 @@
     </nav>
   </main>
 
+    <script>
+        // ====== CARRINHO ======
+        let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+
+        function salvarCarrinho() {
+            localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        }
+
+        function atualizarContador() {
+            const count = carrinho.reduce((acc, item) => acc + item.qtd, 0);
+            document.getElementById('cart-count').textContent = count;
+        }
+
+        function animarCarrinho() {
+            const icon = document.getElementById('cart-icon');
+            icon.classList.add('bounce');
+            setTimeout(() => icon.classList.remove('bounce'), 400);
+        }
+
+      /*  function adicionarCarrinho(titulo, preco, imagem) {
+            const item = carrinho.find(p => p.titulo === titulo);
+            if (item) {
+                item.qtd += 1;
+            } else {
+                carrinho.push({ titulo, preco, imagem, qtd: 1 });
+            }
+            salvarCarrinho();
+            atualizarContador();
+            animarCarrinho();
+            atualizarDropdown();
+        }*/
+
+        function adicionarCarrinho(titulo, preco, imagem, codigo = '') {
+            const item = carrinho.find(p => (codigo ? p.codigo === codigo : p.titulo === titulo));
+            if (item) {
+                item.qtd += 1;
+            } else {
+                carrinho.push({ titulo, preco, imagem, codigo, qtd: 1 });
+            }
+            salvarCarrinho();
+            atualizarContador();
+            animarCarrinho();
+            atualizarDropdown();
+        }
+
+        function alterarQtd(index, valor) {
+            carrinho[index].qtd += valor;
+            if (carrinho[index].qtd <= 0) {
+                carrinho.splice(index, 1);
+            }
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+        function removerProduto(index) {
+            carrinho.splice(index, 1);
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+        function atualizarDropdown() {
+            const container = document.getElementById('cart-items');
+            container.innerHTML = '';
+            let total = 0;
+
+            carrinho.forEach((item, index) => {
+                total += item.preco * item.qtd;
+                container.innerHTML += `
+                    <div class="cart-item">
+                        <img src="${item.imagem}" alt="${item.titulo}">
+                        <div class="cart-item-info">
+                            <div class="codigo">${item.codigo ? item.codigo : ''}</div>
+                            <div>${item.titulo}</div>
+                            <div class="cart-controls">
+                                <button onclick="alterarQtd(${index}, -1)">-</button>
+                                <input type="number" min="0" value="${item.qtd}" onchange="alterarQtdInput(${index}, this.value)" style="width: 50px; text-align: center; font-size:16px;">
+                                <button onclick="alterarQtd(${index}, 1)">+</button>
+                                <button class="remove-btn" onclick="removerProduto(${index})">🗑️</button>
+                            </div>
+                            <div>${(item.preco * item.qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('cart-total').textContent =`Total: R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function alterarQtdInput(index, valor) {
+            valor = parseInt(valor);
+            if (isNaN(valor) || valor < 0) valor = 0;
+
+            if (valor === 0) {
+                carrinho.splice(index, 1); // remove se 0
+            } else {
+                carrinho[index].qtd = valor;
+            }
+
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+
+        function toggleCarrinho() {
+            const drop = document.getElementById('cart-dropdown');
+            const isOpen = getComputedStyle(drop).display !== 'none';
+            drop.style.display = isOpen ? 'none' : 'flex';
+        }
+
+        // ====== CONTROLE DE ABRIR/FECHAR ======
+        // Não fechar ao clicar dentro do menu
+        document.getElementById('cart-dropdown').addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+
+        // IMPORTANTE: como já existe onclick="toggleCarrinho()" no HTML,
+        // aqui só paramos a propagação para não disparar o listener do documento.
+        document.getElementById('cart-icon').addEventListener('click', function (e) {
+            e.stopPropagation();
+            // não chama toggleCarrinho() aqui para evitar duplo toggle
+        });
+
+        // Fecha apenas se clicar fora do ícone e do menu
+        document.addEventListener('click', function (event) {
+            const drop = document.getElementById('cart-dropdown');
+            const icon = document.getElementById('cart-icon');
+            if (!drop.contains(event.target) && !icon.contains(event.target)) {
+                drop.style.display = 'none';
+            }
+        });
+
+        
+      /*  function finalizarCompra() {
+            alert('Compra finalizada!');
+            carrinho = [];
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+            document.getElementById('cart-dropdown').style.display = 'none';
+        }*/
+
+function mostrarSucesso(mensagem) {
+    let aviso = document.createElement('div');
+    aviso.className = 'sucesso-tooltip';
+    aviso.textContent = mensagem;
+    document.body.appendChild(aviso);
+
+    // Exibir com animação
+    setTimeout(() => aviso.classList.add('show'), 10);
+
+    // Remover após 3,5s
+    setTimeout(() => {
+        aviso.classList.remove('show');
+        setTimeout(() => aviso.remove(), 400); // esperar terminar animação
+    }, 3500);
+}
+
+    function finalizarCompra() {
+        let total = carrinho.reduce((acc, item) => acc + item.preco * item.qtd, 0);
+        const botao = document.querySelector('.finalizar');
+
+        // Remove tooltip antiga se existir
+        let oldTooltip = document.querySelector('.finalizar-tooltip');
+        if (oldTooltip) oldTooltip.remove();
+
+        if (total < 500) {
+            // Criar tooltip para valor mínimo
+            let tooltip = document.createElement('div');
+            tooltip.classList.add('finalizar-tooltip');
+            tooltip.textContent = 'O valor mínimo para finalizar a compra é R$500,00';
+            botao.appendChild(tooltip);
+
+            setTimeout(() => tooltip.classList.add('show'), 10);
+            setTimeout(() => tooltip.classList.remove('show'), 3500);
+            setTimeout(() => tooltip.remove(), 3500);
+            return;
+        }
+
+        // Enviar pedido para o Flask
+        fetch('http://127.0.0.1:5000/finalizar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ total: total, itens: carrinho })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Mostrar sucesso usando sua função CSS
+            mostrarSucesso(`Pedido enviado com sucesso! ID: ${data.pedido_id}`);
+
+            // Limpar carrinho e atualizar
+            carrinho = [];
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+            document.getElementById('cart-dropdown').style.display = 'none';
+        })
+        .catch(err => {
+            let erroTooltip = document.createElement('div');
+            erroTooltip.classList.add('finalizar-tooltip');
+            erroTooltip.textContent = 'Erro ao enviar pedido. Tente novamente!';
+            botao.appendChild(erroTooltip);
+
+            setTimeout(() => erroTooltip.classList.add('show'), 10);
+            setTimeout(() => erroTooltip.classList.remove('show'), 3500);
+            setTimeout(() => erroTooltip.remove(), 3500);
+
+            console.error('Erro ao enviar pedido:', err);
+        });
+    }
+  
+        // Inicialização
+        atualizarContador();
+        atualizarDropdown();
+    </script>
 </body>
 </html>
