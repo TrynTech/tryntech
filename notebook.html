@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Notebook</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f4f6f8;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        h1 {
+            color: #000;
+            text-transform: uppercase;
+            margin: 0;    
+        }
+
+        .titulo_nome {
+        font-family: 'Story_Script';
+        font-size: 35px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin: 0;
+        }
+
+        .titulo_nome a {
+        text-decoration: none;
+        background: linear-gradient(270deg, #050c4e, #012b30, #01162e, #021d1b, #020f33);
+        background-size: 600% 600%;
+        -webkit-background-clip:text;
+        -webkit-text-fill-color: transparent;
+        animation: gradientShift 12s ease infinite;
+        transition: text-shadow 0.5s;
+        display: inline-block;
+        }
+
+        @keyframes gradientShift {
+        0% { background-position: 0% 50%; }  
+        50% { background-position: 100% 50%; }  
+        100% { background-position: 0% 50%; }  
+        }        
+
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0; /* garante que ocupe até o fim */
+            width: 100%;
+            background: #fff;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            z-index: 1000;
+            flex-wrap: wrap;
+            gap: 10px;
+            box-sizing: border-box; /* impede que padding estoure a largura */
+        }
+
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 24px;
+            margin-right: 10px;
+            margin-top: 8px;
+        }
+
+        .cart-icon img {
+            width: 34px;
+            transition: transform 0.2s ease;
+        }
+
+        .cart-icon.bounce img {
+            transform: scale(1.3);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            background: red;
+            color: white;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* Dropdown do carrinho */
+        .cart-dropdown {
+            display: none;                 /* começa oculto */
+            position: fixed;
+            top: 60px;                     /* logo abaixo do header */
+            right: 0;
+            width: 400px;
+            height: calc(100vh - 60px);    /* altura total visível */
+            background: white;
+            border-radius: 8px 0 0 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            padding: 10px;
+            z-index: 2000;
+            /* quando abrir via JS, usaremos display:flex */
+            flex-direction: column;
+        }
+
+        #cart-items {
+            overflow-y: auto;      /* rolagem só aqui */
+            flex: 1;               /* ocupa o espaço disponível */
+            display: block;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .cart-item img {
+            width: 90px;
+            height: 90%;
+            object-fit: contain;
+        }
+        .cart-item-info {
+            flex: 1;
+            font-size: 13px;
+        }
+        .cart-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .cart-controls button {
+            border: none;
+            background: #ddd;
+            padding: 4px 8px; 
+            cursor: pointer;
+            font-size: 15px; /*aumenta o tamanho do + - e da lixeira*/
+            border-radius: 4px;
+        }
+        .remove-btn {
+            background: red;
+            color: white;
+        }
+        .cart-total {
+           font-weight: bold;
+            margin-top: 10px;
+            text-align: right;
+
+            position: sticky;   /* fixa dentro do scroller */
+            bottom: 52px;       /* espaço para o botão (ajusto dinamicamente no JS também) */
+            background: white;
+            padding: 8px 0;
+            z-index: 1;
+        }
+        .cart-dropdown button.finalizar {
+            flex-shrink: 0;
+            width: 100%;
+            padding: 12px;      /* um pouco mais alto */
+            background: #0aa030;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+            font-weight: bold;
+
+            position: sticky;   /* fica colado no fundo do scroller */
+            bottom: 12px;
+            z-index: 2;
+        }
+
+                        /* Tooltip de aviso do botão finalizar */
+        .finalizar-tooltip {
+            position: absolute;
+            background: #ff4d4f;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            top: -58px;       /* acima do botão */
+            left: 0;
+            opacity: 0;
+            transform: translateY(0);
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            white-space: nowrap;
+            z-index: 3000;
+        }
+        .finalizar-tooltip.show {
+            opacity: 1;
+            transform: translateY(-10px);
+        }
+
+        .sucesso-tooltip {
+            position: fixed;
+            background: #0aa030;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            top: 18%; 
+            left: 50%; 
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            z-index: 4000;
+            white-space: nowrap;
+        }
+
+        .sucesso-tooltip.show {
+            opacity: 1;
+            transform: translate(-50%, -20%);
+        }
+
+                        /* Remove setas do input number */
+        .cart-controls input[type="number"]::-webkit-outer-spin-button,
+        .cart-controls input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .cart-controls input[type="number"] {
+            font-size: 16px;
+            width: 50px;
+            text-align: center;
+            border-radius: 6px;
+            border: 1px solid #bbb;
+            padding: 4px 6px;
+            background-color: #f9f9f9;
+            font-family: 'Arial', sans-serif; /* você pode trocar para outra fonte bonita */
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+
+        .cart-controls input[type="number"]:focus {
+            outline: none;
+            border-color: #0a9b43;
+            box-shadow: 0 0 4px #0a9b43;
+        }
+
+        .produto {
+            background: #fff;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            width: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s;
+        }
+
+        .produto:hover {
+            transform: translateY(-5px);
+        }
+
+        .produto img {
+            width: 100%;
+            border-bottom: 1px solid rgb(114, 107, 107);
+            object-fit: contain;
+            background: #f0f0f0;
+        }
+
+        .codigo {
+            font-size: 13px;
+            color: #555;
+            margin-top: 8px;
+        }
+
+        .titulo {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 7px 0 12px 0;
+            color: #202020;
+            height: auto;
+        }
+
+        .precos {
+            text-align: right;
+            margin-top: auto;
+        }
+
+        .preco-atual {
+            color: #0a9b43;
+            font-weight: bold;
+            font-size: 21px;
+        }
+
+        .preco-antigo {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .desconto {
+            color: #1bbf00;
+            background-color: #e6ffe6;
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .pix {
+            font-size: 13px;
+            color: #777;
+        }
+
+        .add-btn {
+            margin-top: 10px;
+            padding: 8px;
+            background: #0a9b43;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .add-btn:hover {
+            background: #0d7e39;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 class="titulo_nome"><a href="main.html">🛒 Notebook</a></h1>
+        <div class="cart-icon" onclick="toggleCarrinho()" id="cart-icon">
+            <img src="https://cdn-icons-png.flaticon.com/512/1170/1170678.png" alt="Carrinho">
+            <div class="cart-count" id="cart-count">0</div>
+
+            <div class="cart-dropdown" id="cart-dropdown">
+                <div id="cart-items"></div>
+                <div class="cart-total" id="cart-total">Total: R$ 0,00</div>
+                <button class="finalizar" onclick="finalizarCompra()">Finalizar</button>
+            </div>
+        </div>
+    </header>
+
+    <div style="margin-top:80px; display:flex; flex-wrap:wrap; justify-content:center; width:100%;">
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/394162-300-300/p_58274_alta_1.png?v=638618581239900000" alt="Produto">
+            <div class="codigo">Cód.: 571702</div>
+            <div class="titulo">Notebook Lenovo Ultrafino IdeaPad 1i i3-1215U, 15.6" 4GB, 256GB SSD, Intel UHD Graphics, 82VY000TBR | Cloud Grey</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 3.584,18 por</div>
+                <div class="preco-atual">R$ 2.547,02 <span class="pix">no pix</span></div>
+                <div class="desconto">-24% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Notebook Lenovo Ultrafino IdeaPad 1i i3-1215U, 15.6\' 4GB, 256GB SSD, Intel UHD Graphics, 82VY000TBR | Cloud Grey', 2547.0164, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/394162-300-300/p_58274_alta_1.png?v=638618581239900000', '571702')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/394192-300-300/p_58275_alta_1.png?v=638618581498400000" alt="Produto">
+            <div class="codigo">Cód.: 571703</div>
+            <div class="titulo">Notebook Lenovo Ultrafino IdeaPad 1i i7-1255U, 15.6" 12GB, 512GB SSD, Intel Iris® Xe, 82VY000PBR | Cloud Grey</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 5.796,06 por</div>
+                <div class="preco-atual">R$ 4.340,41 <span class="pix">no pix</span></div>
+                <div class="desconto">-20% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Notebook Lenovo Ultrafino IdeaPad 1i i7-1255U, 15.6\' 12GB, 512GB SSD, Intel Iris® Xe, 82VY000PBR | Cloud Grey', 4340.4057999999995, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/394192-300-300/p_58275_alta_1.png?v=638618581498400000', '571703')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/328839-300-300/p_58064_alta_1.png?v=638308186383900000" alt="Produto">
+            <div class="codigo">Cód.: 571693</div>
+            <div class="titulo">Notebook Acer Aspire 3 A315-510P-34XC, Intel Core I3, 15.6" 8GB 256GB SSD | Prata</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 3.284,43 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Notebook Acer Aspire 3 A315-510P-34XC, Intel Core I3, 15.6\' 8GB 256GB SSD | Prata', 3284.4267, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/328839-300-300/p_58064_alta_1.png?v=638308186383900000', '571693')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418297-300-300/a_571744_alta_1.jpg?v=638829324925000000" alt="Produto">
+            <div class="codigo">Cód.: 571744</div>
+            <div class="titulo">Notebook Acer Nitro V15, Intel Core I5-13420H, 15.6" FHD 8GB, SSD 512GB, RTX 3050 6GB - ANV15-51-57WS | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 6.033,22 por</div>
+                <div class="preco-atual">R$ 5.026,09 <span class="pix">no pix</span></div>
+                <div class="desconto">-10% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Notebook Acer Nitro V15, Intel Core I5-13420H, 15.6\' FHD 8GB, SSD 512GB, RTX 3050 6GB - ANV15-51-57WS | Preto', 5026.0886, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418297-300-300/a_571744_alta_1.jpg?v=638829324925000000', '571744')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/440823-300-300/p_60684_alta_1.jpg?v=638877486362930000" alt="Produto">
+            <div class="codigo">Cód.: 571747</div>
+            <div class="titulo">Notebook Lenovo IdeaPad 3i Intel Core i5 13ªG, Tela 15,6" FHD, WiFi 6, 8GB RAM, 512GB SSD, 83NS0002BR | Grey</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 4.710,69 por</div>
+                <div class="preco-atual">R$ 3.549,42 <span class="pix">no pix</span></div>
+                <div class="desconto">-19% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Notebook Lenovo IdeaPad 3i Intel Core i5 13ªG, Tela 15,6\' FHD, WiFi 6, 8GB RAM, 512GB SSD, 83NS0002BR | Grey', 3549.4166999999998, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/440823-300-300/p_60684_alta_1.jpg?v=638877486362930000', '571747')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/405049-300-300/p_59770_alta_1.jpg?v=638660739644330000" alt="Produto">
+            <div class="codigo">Cód.: 571741</div>
+            <div class="titulo">Notebook Gamer Acer Nitro V15 ANV15-51-7837, 15.6" Intel Core i7-13620H, 8GB DDR5, 512GB SSD Linux Gutta | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 6.772,53 por</div>
+                <div class="preco-atual">R$ 5.435,27 <span class="pix">no pix</span></div>
+                <div class="desconto">-14% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Notebook Gamer Acer Nitro V15 ANV15-51-7837, 15.6\' Intel Core i7-13620H, 8GB DDR5, 512GB SSD Linux Gutta | Preto', 5435.2743, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/405049-300-300/p_59770_alta_1.jpg?v=638660739644330000', '571741')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/405037-300-300/p_59769_alta_1.jpg?v=638660739541600000" alt="Produto">
+            <div class="codigo">Cód.: 571740</div>
+            <div class="titulo">Notebook Acer Nitro V15 ANV15-51-58AZ 15,6" Intel Core I5-13420H, 8GB, SSD 512GB, NVIDIA® GeForce® RTX 3050 | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 7.415,04 por</div>
+                <div class="preco-atual">R$ 5.749,43 <span class="pix">no pix</span></div>
+                <div class="desconto">-17% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Notebook Acer Nitro V15 ANV15-51-58AZ 15,6\' Intel Core I5-13420H, 8GB, SSD 512GB, NVIDIA® GeForce® RTX 3050 | Preto', 5749.4266, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/405037-300-300/p_59769_alta_1.jpg?v=638660739541600000', '571740')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/443485-300-300/windows-pro-571751-01.png?v=638894849715570000" alt="Produto">
+            <div class="codigo">Cód.: 571751</div>
+            <div class="titulo">Notebook Acer Vero AV15-53P-51MR, Tela 15" FHD, Intel Core i5-1335U, 8GB RAM 512GB SSD, Windows 11 Pro, Intel Iris Xe | Verde</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 4.744,57 por</div>
+                <div class="preco-atual">R$ 4.075,60 <span class="pix">no pix</span></div>
+                <div class="desconto">-8% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Notebook Acer Vero AV15-53P-51MR, Tela 15\' FHD, Intel Core i5-1335U, 8GB RAM 512GB SSD, Windows 11 Pro, Intel Iris Xe | Verde', 4075.5973, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/443485-300-300/windows-pro-571751-01.png?v=638894849715570000', '571751')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/404879-300-300/p_59727_alta_1.jpg?v=638660634997770000" alt="Produto">
+            <div class="codigo">Cód.: 571738</div>
+            <div class="titulo">Notebook Lenovo 1i Celeron N4500, 4GB, 128GB SSD, 15.6" FHD, 82QH0007BR | Grey</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.438,31 por</div>
+                <div class="preco-atual">R$ 2.007,11 <span class="pix">no pix</span></div>
+                <div class="desconto">-12% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Notebook Lenovo 1i Celeron N4500, 4GB, 128GB SSD, 15.6\' FHD, 82QH0007BR | Grey', 2007.1144000000002, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/404879-300-300/p_59727_alta_1.jpg?v=638660634997770000', '571738')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/444421-300-300/p_60791_alta_1.jpg?v=638899965352270000" alt="Produto">
+            <div class="codigo">Cód.: 571756</div>
+            <div class="titulo">Notebook Acer Aspire Go 15, AG15-51P-55LL, Intel Core i5-1334U, 8GB RAM 256GB SSD M.2, Tela de 15" WUXGA IPS, Intel UHD Graphics | Azul</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 4.472,32 por</div>
+                <div class="preco-atual">R$ 3.622,13 <span class="pix">no pix</span></div>
+                <div class="desconto">-13% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Notebook Acer Aspire Go 15, AG15-51P-55LL, Intel Core i5-1334U, 8GB RAM 256GB SSD M.2, Tela de 15\' WUXGA IPS, Intel UHD Graphics | Azul', 3622.1256, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/444421-300-300/p_60791_alta_1.jpg?v=638899965352270000', '571756')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/444429-300-300/p_60790_alta_1.jpg?v=638899995951670000" alt="Produto">
+            <div class="codigo">Cód.: 571755</div>
+            <div class="titulo">Notebook Acer Aspire Go 15, AG15-51P-54EE, Intel Core i5-1334U, 8GB RAM 512GB SSD M.2, Tela de 15" WUXGA IPS, Intel UHD Graphics | Azul</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 4.627,20 por</div>
+                <div class="preco-atual">R$ 3.745,93 <span class="pix">no pix</span></div>
+                <div class="desconto">-13% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Notebook Acer Aspire Go 15, AG15-51P-54EE, Intel Core i5-1334U, 8GB RAM 512GB SSD M.2, Tela de 15\' WUXGA IPS, Intel UHD Graphics | Azul', 3745.9327999999996, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/444429-300-300/p_60790_alta_1.jpg?v=638899995951670000', '571755')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418178-300-300/p_59768_alta_1.jpg?v=638744616479670000" alt="Produto">
+            <div class="codigo">Cód.: 571739</div>
+            <div class="titulo">Notebook Acer Aspire 5 A515-57-76MR 15.6" Intel Core i7-12650H, 8GB DDR4, 512GB SSD | Cinza Aço</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 4.983,56 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Notebook Acer Aspire 5 A515-57-76MR 15.6\' Intel Core i7-12650H, 8GB DDR4, 512GB SSD | Cinza Aço', 4983.5571, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418178-300-300/p_59768_alta_1.jpg?v=638744616479670000', '571739')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446432-300-300/p_60831_alta_2.jpg?v=638919176815400000" alt="Produto">
+            <div class="codigo">Cód.: 571757</div>
+            <div class="titulo">Notebook Acer CI5-13ª 16G 512G 14" Windows 11 Professional, WUXGA IPS, Intel Core i5-1335U de 13ª Geração, DDR4, Intel UHD Graphics.</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 5.067,53 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Notebook Acer CI5-13ª 16G 512G 14\' Windows 11 Professional, WUXGA IPS, Intel Core i5-1335U de 13ª Geração, DDR4, Intel UHD Graphics.', 5067.531099999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446432-300-300/p_60831_alta_2.jpg?v=638919176815400000', '571757')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/398910-300-300/p_59572_alta_1.jpg?v=638634855106030000" alt="Produto">
+            <div class="codigo">Cód.: 571731</div>
+            <div class="titulo">Notebook Acer Aspire 5 A515-45-R0XR, AMD Ryzen 7, 15.6" 8GB, 256GB SSD | Prata</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 3.943,55 por</div>
+                <div class="preco-atual">R$ 3.109,28 <span class="pix">no pix</span></div>
+                <div class="desconto">-15% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Notebook Acer Aspire 5 A515-45-R0XR, AMD Ryzen 7, 15.6\' 8GB, 256GB SSD | Prata', 3109.2792, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/398910-300-300/p_59572_alta_1.jpg?v=638634855106030000', '571731')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/437246-300-300/p_60593_alta_1.jpg?v=638857865112500000" alt="Produto">
+            <div class="codigo">Cód.: 571746</div>
+            <div class="titulo">Notebook ACER CI7 - 8G, 512G, Tela de 15" Processador Intel® Core i7-13620H da 13ª Geração - A15-51M-793V | Cinza</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 5.495,98 por</div>
+                <div class="preco-atual">R$ 4.720,59 <span class="pix">no pix</span></div>
+                <div class="desconto">-8% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Notebook ACER CI7 - 8G, 512G, Tela de 15\' Processador Intel® Core i7-13620H da 13ª Geração - A15-51M-793V | Cinza', 4720.587799999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/437246-300-300/p_60593_alta_1.jpg?v=638857865112500000', '571746')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446405-300-300/p_60834_alta_2.jpg?v=638919061361300000" alt="Produto">
+            <div class="codigo">Cód.: 571758</div>
+            <div class="titulo">Notebook Acer TravelMate TMP214-55-70G2, Processador Intel Core i7-1355U de 13ª geração, Tela 14" IPS WUXGA, 16GB de RAM DDR4 e 512GB de</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 5.439,36 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Notebook Acer TravelMate TMP214-55-70G2, Processador Intel Core i7-1355U de 13ª geração, Tela 14\' IPS WUXGA, 16GB de RAM DDR4 e 512GB de', 5439.3641, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446405-300-300/p_60834_alta_2.jpg?v=638919061361300000', '571758')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446440-300-300/p_60835_alta_1.png?v=638919217009100000" alt="Produto">
+            <div class="codigo">Cód.: 571759</div>
+            <div class="titulo">Notebook Acer TravelMate TMP214-55-59VU Intel Core i5-1335U de 13ª, Tela 14" IPS WUXGA, 8 GB de RAM DDR4, 512 GB de SSD NVMe</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 4.838,73 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Notebook Acer TravelMate TMP214-55-59VU Intel Core i5-1335U de 13ª, Tela 14\' IPS WUXGA, 8 GB de RAM DDR4, 512 GB de SSD NVMe', 4838.7322, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446440-300-300/p_60835_alta_1.png?v=638919217009100000', '571759')">Adicionar ao Carrinho</button>        </div>
+
+    </div>
+
+    <script>
+        // ====== CARRINHO ======
+        let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+
+        function salvarCarrinho() {
+            localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        }
+
+        function atualizarContador() {
+            const count = carrinho.reduce((acc, item) => acc + item.qtd, 0);
+            document.getElementById('cart-count').textContent = count;
+        }
+
+        function animarCarrinho() {
+            const icon = document.getElementById('cart-icon');
+            icon.classList.add('bounce');
+            setTimeout(() => icon.classList.remove('bounce'), 400);
+        }
+
+      /*  function adicionarCarrinho(titulo, preco, imagem) {
+            const item = carrinho.find(p => p.titulo === titulo);
+            if (item) {
+                item.qtd += 1;
+            } else {
+                carrinho.push({ titulo, preco, imagem, qtd: 1 });
+            }
+            salvarCarrinho();
+            atualizarContador();
+            animarCarrinho();
+            atualizarDropdown();
+        }*/
+
+        function adicionarCarrinho(titulo, preco, imagem, codigo = '') {
+            const item = carrinho.find(p => (codigo ? p.codigo === codigo : p.titulo === titulo));
+            if (item) {
+                item.qtd += 1;
+            } else {
+                carrinho.push({ titulo, preco, imagem, codigo, qtd: 1 });
+            }
+            salvarCarrinho();
+            atualizarContador();
+            animarCarrinho();
+            atualizarDropdown();
+        }
+
+        function alterarQtd(index, valor) {
+            carrinho[index].qtd += valor;
+            if (carrinho[index].qtd <= 0) {
+                carrinho.splice(index, 1);
+            }
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+        function removerProduto(index) {
+            carrinho.splice(index, 1);
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+        function atualizarDropdown() {
+            const container = document.getElementById('cart-items');
+            container.innerHTML = '';
+            let total = 0;
+
+            carrinho.forEach((item, index) => {
+                total += item.preco * item.qtd;
+                container.innerHTML += `
+                    <div class="cart-item">
+                        <img src="${item.imagem}" alt="${item.titulo}">
+                        <div class="cart-item-info">
+                            <div class="codigo">${item.codigo ? item.codigo : ''}</div>
+                            <div>${item.titulo}</div>
+                            <div class="cart-controls">
+                                <button onclick="alterarQtd(${index}, -1)">-</button>
+                                <input type="number" min="0" value="${item.qtd}" onchange="alterarQtdInput(${index}, this.value)" style="width: 50px; text-align: center; font-size:16px;">
+                                <button onclick="alterarQtd(${index}, 1)">+</button>
+                                <button class="remove-btn" onclick="removerProduto(${index})">🗑️</button>
+                            </div>
+                            <div>${(item.preco * item.qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('cart-total').textContent =`Total: R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function alterarQtdInput(index, valor) {
+            valor = parseInt(valor);
+            if (isNaN(valor) || valor < 0) valor = 0;
+
+            if (valor === 0) {
+                carrinho.splice(index, 1); // remove se 0
+            } else {
+                carrinho[index].qtd = valor;
+            }
+
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+
+        function toggleCarrinho() {
+            const drop = document.getElementById('cart-dropdown');
+            const isOpen = getComputedStyle(drop).display !== 'none';
+            drop.style.display = isOpen ? 'none' : 'flex';
+        }
+
+        // ====== CONTROLE DE ABRIR/FECHAR ======
+        // Não fechar ao clicar dentro do menu
+        document.getElementById('cart-dropdown').addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+
+        // IMPORTANTE: como já existe onclick="toggleCarrinho()" no HTML,
+        // aqui só paramos a propagação para não disparar o listener do documento.
+        document.getElementById('cart-icon').addEventListener('click', function (e) {
+            e.stopPropagation();
+            // não chama toggleCarrinho() aqui para evitar duplo toggle
+        });
+
+        // Fecha apenas se clicar fora do ícone e do menu
+        document.addEventListener('click', function (event) {
+            const drop = document.getElementById('cart-dropdown');
+            const icon = document.getElementById('cart-icon');
+            if (!drop.contains(event.target) && !icon.contains(event.target)) {
+                drop.style.display = 'none';
+            }
+        });
+
+        
+      /*  function finalizarCompra() {
+            alert('Compra finalizada!');
+            carrinho = [];
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+            document.getElementById('cart-dropdown').style.display = 'none';
+        }*/
+
+function mostrarSucesso(mensagem) {
+    let aviso = document.createElement('div');
+    aviso.className = 'sucesso-tooltip';
+    aviso.textContent = mensagem;
+    document.body.appendChild(aviso);
+
+    // Exibir com animação
+    setTimeout(() => aviso.classList.add('show'), 10);
+
+    // Remover após 3,5s
+    setTimeout(() => {
+        aviso.classList.remove('show');
+        setTimeout(() => aviso.remove(), 400); // esperar terminar animação
+    }, 3500);
+}
+
+    function finalizarCompra() {
+        let total = carrinho.reduce((acc, item) => acc + item.preco * item.qtd, 0);
+        const botao = document.querySelector('.finalizar');
+
+        // Remove tooltip antiga se existir
+        let oldTooltip = document.querySelector('.finalizar-tooltip');
+        if (oldTooltip) oldTooltip.remove();
+
+        if (total < 500) {
+            // Criar tooltip para valor mínimo
+            let tooltip = document.createElement('div');
+            tooltip.classList.add('finalizar-tooltip');
+            tooltip.textContent = 'O valor mínimo para finalizar a compra é R$500,00';
+            botao.appendChild(tooltip);
+
+            setTimeout(() => tooltip.classList.add('show'), 10);
+            setTimeout(() => tooltip.classList.remove('show'), 3500);
+            setTimeout(() => tooltip.remove(), 3500);
+            return;
+        }
+
+        // Enviar pedido para o Flask
+        fetch('http://127.0.0.1:5000/finalizar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ total: total, itens: carrinho })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Mostrar sucesso usando sua função CSS
+            mostrarSucesso(`Pedido enviado com sucesso! ID: ${data.pedido_id}`);
+
+            // Limpar carrinho e atualizar
+            carrinho = [];
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+            document.getElementById('cart-dropdown').style.display = 'none';
+        })
+        .catch(err => {
+            let erroTooltip = document.createElement('div');
+            erroTooltip.classList.add('finalizar-tooltip');
+            erroTooltip.textContent = 'Erro ao enviar pedido. Tente novamente!';
+            botao.appendChild(erroTooltip);
+
+            setTimeout(() => erroTooltip.classList.add('show'), 10);
+            setTimeout(() => erroTooltip.classList.remove('show'), 3500);
+            setTimeout(() => erroTooltip.remove(), 3500);
+
+            console.error('Erro ao enviar pedido:', err);
+        });
+    }
+  
+        // Inicialização
+        atualizarContador();
+        atualizarDropdown();
+    </script>
+</body>
+</html>
