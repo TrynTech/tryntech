@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Smartphone / celular</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f4f6f8;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        h1 {
+            color: #000;
+            text-transform: uppercase;
+            margin: 0;    
+        }
+
+        .titulo_nome {
+        font-family: 'Story_Script';
+        font-size: 35px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin: 0;
+        }
+
+        .titulo_nome a {
+        text-decoration: none;
+        background: linear-gradient(270deg, #050c4e, #012b30, #01162e, #021d1b, #020f33);
+        background-size: 600% 600%;
+        -webkit-background-clip:text;
+        -webkit-text-fill-color: transparent;
+        animation: gradientShift 12s ease infinite;
+        transition: text-shadow 0.5s;
+        display: inline-block;
+        }
+
+        @keyframes gradientShift {
+        0% { background-position: 0% 50%; }  
+        50% { background-position: 100% 50%; }  
+        100% { background-position: 0% 50%; }  
+        }        
+
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0; /* garante que ocupe até o fim */
+            width: 100%;
+            background: #fff;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            z-index: 1000;
+            flex-wrap: wrap;
+            gap: 10px;
+            box-sizing: border-box; /* impede que padding estoure a largura */
+        }
+
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 24px;
+            margin-right: 10px;
+            margin-top: 8px;
+        }
+
+        .cart-icon img {
+            width: 34px;
+            transition: transform 0.2s ease;
+        }
+
+        .cart-icon.bounce img {
+            transform: scale(1.3);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            background: red;
+            color: white;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* Dropdown do carrinho */
+        .cart-dropdown {
+            display: none;                 /* começa oculto */
+            position: fixed;
+            top: 60px;                     /* logo abaixo do header */
+            right: 0;
+            width: 400px;
+            height: calc(100vh - 60px);    /* altura total visível */
+            background: white;
+            border-radius: 8px 0 0 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            padding: 10px;
+            z-index: 2000;
+            /* quando abrir via JS, usaremos display:flex */
+            flex-direction: column;
+        }
+
+        #cart-items {
+            overflow-y: auto;      /* rolagem só aqui */
+            flex: 1;               /* ocupa o espaço disponível */
+            display: block;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .cart-item img {
+            width: 90px;
+            height: 90%;
+            object-fit: contain;
+        }
+        .cart-item-info {
+            flex: 1;
+            font-size: 13px;
+        }
+        .cart-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .cart-controls button {
+            border: none;
+            background: #ddd;
+            padding: 4px 8px; 
+            cursor: pointer;
+            font-size: 15px; /*aumenta o tamanho do + - e da lixeira*/
+            border-radius: 4px;
+        }
+        .remove-btn {
+            background: red;
+            color: white;
+        }
+        .cart-total {
+           font-weight: bold;
+            margin-top: 10px;
+            text-align: right;
+
+            position: sticky;   /* fixa dentro do scroller */
+            bottom: 52px;       /* espaço para o botão (ajusto dinamicamente no JS também) */
+            background: white;
+            padding: 8px 0;
+            z-index: 1;
+        }
+        .cart-dropdown button.finalizar {
+            flex-shrink: 0;
+            width: 100%;
+            padding: 12px;      /* um pouco mais alto */
+            background: #0aa030;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+            font-weight: bold;
+
+            position: sticky;   /* fica colado no fundo do scroller */
+            bottom: 12px;
+            z-index: 2;
+        }
+
+                        /* Tooltip de aviso do botão finalizar */
+        .finalizar-tooltip {
+            position: absolute;
+            background: #ff4d4f;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            top: -58px;       /* acima do botão */
+            left: 0;
+            opacity: 0;
+            transform: translateY(0);
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            white-space: nowrap;
+            z-index: 3000;
+        }
+        .finalizar-tooltip.show {
+            opacity: 1;
+            transform: translateY(-10px);
+        }
+
+        .sucesso-tooltip {
+            position: fixed;
+            background: #0aa030;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            top: 18%; 
+            left: 50%; 
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            z-index: 4000;
+            white-space: nowrap;
+        }
+
+        .sucesso-tooltip.show {
+            opacity: 1;
+            transform: translate(-50%, -20%);
+        }
+
+                        /* Remove setas do input number */
+        .cart-controls input[type="number"]::-webkit-outer-spin-button,
+        .cart-controls input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .cart-controls input[type="number"] {
+            font-size: 16px;
+            width: 50px;
+            text-align: center;
+            border-radius: 6px;
+            border: 1px solid #bbb;
+            padding: 4px 6px;
+            background-color: #f9f9f9;
+            font-family: 'Arial', sans-serif; /* você pode trocar para outra fonte bonita */
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+
+        .cart-controls input[type="number"]:focus {
+            outline: none;
+            border-color: #0a9b43;
+            box-shadow: 0 0 4px #0a9b43;
+        }
+
+        .produto {
+            background: #fff;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            width: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s;
+        }
+
+        .produto:hover {
+            transform: translateY(-5px);
+        }
+
+        .produto img {
+            width: 100%;
+            border-bottom: 1px solid rgb(114, 107, 107);
+            object-fit: contain;
+            background: #f0f0f0;
+        }
+
+        .codigo {
+            font-size: 13px;
+            color: #555;
+            margin-top: 8px;
+        }
+
+        .titulo {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 7px 0 12px 0;
+            color: #202020;
+            height: auto;
+        }
+
+        .precos {
+            text-align: right;
+            margin-top: auto;
+        }
+
+        .preco-atual {
+            color: #0a9b43;
+            font-weight: bold;
+            font-size: 21px;
+        }
+
+        .preco-antigo {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .desconto {
+            color: #1bbf00;
+            background-color: #e6ffe6;
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .pix {
+            font-size: 13px;
+            color: #777;
+        }
+
+        .add-btn {
+            margin-top: 10px;
+            padding: 8px;
+            background: #0a9b43;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .add-btn:hover {
+            background: #0d7e39;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 class="titulo_nome"><a href="main.html">🛒 Smartphone / celular</a></h1>
+        <div class="cart-icon" onclick="toggleCarrinho()" id="cart-icon">
+            <img src="https://cdn-icons-png.flaticon.com/512/1170/1170678.png" alt="Carrinho">
+            <div class="cart-count" id="cart-count">0</div>
+
+            <div class="cart-dropdown" id="cart-dropdown">
+                <div id="cart-items"></div>
+                <div class="cart-total" id="cart-total">Total: R$ 0,00</div>
+                <button class="finalizar" onclick="finalizarCompra()">Finalizar</button>
+            </div>
+        </div>
+    </header>
+
+    <div style="margin-top:80px; display:flex; flex-wrap:wrap; justify-content:center; width:100%;">
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418217-300-300/a_279329_alta_1.jpg?v=638828416738500000" alt="Produto">
+            <div class="codigo">Cód.: 279329</div>
+            <div class="titulo">Smartphone Motorola G05 XT2523-2, 128GB, 12GB (4GB RAM +8GB RAM Boost), Android 15, Processador Helio G81 Extreme, Câmera Frontal 8MP, Cinza</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.122,98 por</div>
+                <div class="preco-atual">R$ 706,24 <span class="pix">no pix</span></div>
+                <div class="desconto">-33% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Motorola G05 XT2523-2, 128GB, 12GB (4GB RAM +8GB RAM Boost), Android 15, Processador Helio G81 Extreme, Câmera Frontal 8MP, Cinza', 706.2434, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418217-300-300/a_279329_alta_1.jpg?v=638828416738500000', '279329')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/358699-300-300/a_279228_alta_1.png?v=638424128613030000" alt="Produto">
+            <div class="codigo">Cód.: 279228</div>
+            <div class="titulo">Smartphone Samsung Galaxy A05S, 128GB, 6GB RAM, Tela de 6.7" | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.068,09 por</div>
+                <div class="preco-atual">R$ 829,68 <span class="pix">no pix</span></div>
+                <div class="desconto">-17% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Samsung Galaxy A05S, 128GB, 6GB RAM, Tela de 6.7\' | Preto', 829.6754999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/358699-300-300/a_279228_alta_1.png?v=638424128613030000', '279228')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/358653-300-300/a_279229_alta_1.png?v=638424127926800000" alt="Produto">
+            <div class="codigo">Cód.: 279229</div>
+            <div class="titulo">Smartphone Samsung Galaxy A05S, 128GB, 6GB RAM, Tela de 6.7" | Prata</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.104,66 por</div>
+                <div class="preco-atual">R$ 841,12 <span class="pix">no pix</span></div>
+                <div class="desconto">-18% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Samsung Galaxy A05S, 128GB, 6GB RAM, Tela de 6.7\' | Prata', 841.1220999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/358653-300-300/a_279229_alta_1.png?v=638424127926800000', '279229')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/412274-300-300/a_279325_alta_1.jpg?v=638828405615530000" alt="Produto">
+            <div class="codigo">Cód.: 279325</div>
+            <div class="titulo">Smartphone Motorola G15, XT2521-2, 256GB 12GB (4GB RAM + 8GB RAM Boost) e Camera 50MP Bateria de 5200 mAh Tela FHD+ 6.7" Grafite</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.425,54 por</div>
+                <div class="preco-atual">R$ 984,70 <span class="pix">no pix</span></div>
+                <div class="desconto">-26% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Motorola G15, XT2521-2, 256GB 12GB (4GB RAM + 8GB RAM Boost) e Camera 50MP Bateria de 5200 mAh Tela FHD+ 6.7\' Grafite', 984.7006999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/412274-300-300/a_279325_alta_1.jpg?v=638828405615530000', '279325')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/430583-300-300/a_279353_alta_1.png?v=638828406693070000" alt="Produto">
+            <div class="codigo">Cód.: 279353</div>
+            <div class="titulo">Smartphone Samsung Galaxy A26 5G 256GB, 8GB RAM, Câmera de 50MP, IP67, Tela Super AMOLED 6.7", NFC, Edição AI, Octa-core - Branco</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.986,98 por</div>
+                <div class="preco-atual">R$ 1.590,91 <span class="pix">no pix</span></div>
+                <div class="desconto">-14% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Samsung Galaxy A26 5G 256GB, 8GB RAM, Câmera de 50MP, IP67, Tela Super AMOLED 6.7\', NFC, Edição AI, Octa-core - Branco', 1590.9107000000001, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/430583-300-300/a_279353_alta_1.png?v=638828406693070000', '279353')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/413694-300-300/a-279313-alta-1.jpg?v=638715878595370000" alt="Produto">
+            <div class="codigo">Cód.: 279313</div>
+            <div class="titulo">Samsung Galaxy A16 Tela 6.7" Super AMOLED, 128GB, 4GB, Helio G99, Câmera 50MP, Selfie 13MP, Bateria 5.000mAh, NFC, Knox Vault, Verde</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.731,67 por</div>
+                <div class="preco-atual">R$ 1.073,08 <span class="pix">no pix</span></div>
+                <div class="desconto">-33% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Galaxy A16 Tela 6.7\' Super AMOLED, 128GB, 4GB, Helio G99, Câmera 50MP, Selfie 13MP, Bateria 5.000mAh, NFC, Knox Vault, Verde', 1073.0791, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/413694-300-300/a-279313-alta-1.jpg?v=638715878595370000', '279313')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/417673-300-300/a_279318_alta_1.jpg?v=638741989532600000" alt="Produto">
+            <div class="codigo">Cód.: 279318</div>
+            <div class="titulo">Smartphone Samsung Galaxy A16 4G, 256GB, 4GB RAM+4GB RAM Plus, Processador MediaTek, Câmera Tripla Traseira de até 50MP, Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.941,00 por</div>
+                <div class="preco-atual">R$ 1.182,44 <span class="pix">no pix</span></div>
+                <div class="desconto">-35% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Samsung Galaxy A16 4G, 256GB, 4GB RAM+4GB RAM Plus, Processador MediaTek, Câmera Tripla Traseira de até 50MP, Preto', 1182.4389, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/417673-300-300/a_279318_alta_1.jpg?v=638741989532600000', '279318')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418483-300-300/a_279307_alta_1.jpg?v=638828406157800000" alt="Produto">
+            <div class="codigo">Cód.: 279307</div>
+            <div class="titulo">Smartphone Motorola G35 XT2433-2, 5G, 256GB, 12GB (4GB RAM +8GB RAM Boost), Android 14 | Cinza</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.832,10 por</div>
+                <div class="preco-atual">R$ 1.178,82 <span class="pix">no pix</span></div>
+                <div class="desconto">-31% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Motorola G35 XT2433-2, 5G, 256GB, 12GB (4GB RAM +8GB RAM Boost), Android 14 | Cinza', 1178.821, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418483-300-300/a_279307_alta_1.jpg?v=638828406157800000', '279307')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/413858-300-300/a-279315-alta-1.jpg?v=638715879587900000" alt="Produto">
+            <div class="codigo">Cód.: 279315</div>
+            <div class="titulo">Samsung Galaxy A16 Tela 6.7" Super AMOLED, 128GB, 4GB, Helio G99, Câmera 50MP, Selfie 13MP, Bateria 5.000mAh, NFC, Knox Vault, Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.734,09 por</div>
+                <div class="preco-atual">R$ 1.075,66 <span class="pix">no pix</span></div>
+                <div class="desconto">-33% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Galaxy A16 Tela 6.7\' Super AMOLED, 128GB, 4GB, Helio G99, Câmera 50MP, Selfie 13MP, Bateria 5.000mAh, NFC, Knox Vault, Preto', 1075.6564, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/413858-300-300/a-279315-alta-1.jpg?v=638715879587900000', '279315')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/430565-300-300/a_279351_alta_1.png?v=638828406479170000" alt="Produto">
+            <div class="codigo">Cód.: 279351</div>
+            <div class="titulo">Smartphone Samsung Galaxy A26 5G 256GB, 8GB RAM, Câmera de 50MP, IP67, Tela Super AMOLED 6.7", NFC, Edição AI, Octa-core - Verde Claro</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.986,98 por</div>
+                <div class="preco-atual">R$ 1.591,32 <span class="pix">no pix</span></div>
+                <div class="desconto">-14% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Samsung Galaxy A26 5G 256GB, 8GB RAM, Câmera de 50MP, IP67, Tela Super AMOLED 6.7\', NFC, Edição AI, Octa-core - Verde Claro', 1591.3220999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/430565-300-300/a_279351_alta_1.png?v=638828406479170000', '279351')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/423874-300-300/a_279341_alta_1.jpg?v=638780081900730000" alt="Produto">
+            <div class="codigo">Cód.: 279341</div>
+            <div class="titulo">Samsung Galaxy A56 5G, 256GB, 8GB RAM, bateria 5000mAh, Câmera Tripla Traseira até 50MP, Processador Exynos, tela 6.7", Dual Chip, Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 3.424,46 por</div>
+                <div class="preco-atual">R$ 2.747,50 <span class="pix">no pix</span></div>
+                <div class="desconto">-14% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Galaxy A56 5G, 256GB, 8GB RAM, bateria 5000mAh, Câmera Tripla Traseira até 50MP, Processador Exynos, tela 6.7\', Dual Chip, Preto', 2747.5013000000004, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/423874-300-300/a_279341_alta_1.jpg?v=638780081900730000', '279341')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/442931-300-300/p_60749_alta_1.png?v=638892511238630000" alt="Produto">
+            <div class="codigo">Cód.: 279371</div>
+            <div class="titulo">Smartphone Xiaomi Redmi A5, CX417AZU, 128 GB, 4 GB + 4 GB RAM Virtual e Câmera 32 MP com IA, 5200 mAh, Tela de 6.88" HD+ 120Hz com 4G.</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 951,09 por</div>
+                <div class="preco-atual">R$ 884,50 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Xiaomi Redmi A5, CX417AZU, 128 GB, 4 GB + 4 GB RAM Virtual e Câmera 32 MP com IA, 5200 mAh, Tela de 6.88\' HD+ 120Hz com 4G.', 884.5006, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/442931-300-300/p_60749_alta_1.png?v=638892511238630000', '279371')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/413733-300-300/a-279321-alta-1.jpg?v=638715878840000000" alt="Produto">
+            <div class="codigo">Cód.: 279321</div>
+            <div class="titulo">Samsung Galaxy A16 5G Tela 6.7" Super AMOLED 90Hz, 128GB, 4GB, Exynos 1330, Câmera Tripla 50MP, IP54, Bateria 5.000mAh, NFC, Azul escuro.</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.820,00 por</div>
+                <div class="preco-atual">R$ 1.228,01 <span class="pix">no pix</span></div>
+                <div class="desconto">-28% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Galaxy A16 5G Tela 6.7\' Super AMOLED 90Hz, 128GB, 4GB, Exynos 1330, Câmera Tripla 50MP, IP54, Bateria 5.000mAh, NFC, Azul escuro.', 1228.0075, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/413733-300-300/a-279321-alta-1.jpg?v=638715878840000000', '279321')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/443883-300-300/p_60748_alta_1.png?v=638895676950600000" alt="Produto">
+            <div class="codigo">Cód.: 279370</div>
+            <div class="titulo">Smartphone Xiaomi Redmi A5, CX417PRE, 128 GB, 4 GB + 4 GB RAM Virtual e Câmera 32 MP com IA, 5200 mAh, Tela de 6.88" HD+ 120Hz com 4G.</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 951,09 por</div>
+                <div class="preco-atual">R$ 884,50 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Xiaomi Redmi A5, CX417PRE, 128 GB, 4 GB + 4 GB RAM Virtual e Câmera 32 MP com IA, 5200 mAh, Tela de 6.88\' HD+ 120Hz com 4G.', 884.5006, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/443883-300-300/p_60748_alta_1.png?v=638895676950600000', '279370')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/442776-300-300/p_60754_alta_1.png?v=638890663746870000" alt="Produto">
+            <div class="codigo">Cód.: 279375</div>
+            <div class="titulo">Smartphone Xiaomi POCO C75, CX414PRE, 256 GB, 8 GB + 8 GB RAM Virtual e Câmera 50 MP com IA, 5160 mAh, Tela de 6.88" HD+ 120Hz com 4G</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.466,68 por</div>
+                <div class="preco-atual">R$ 1.364,68 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Xiaomi POCO C75, CX414PRE, 256 GB, 8 GB + 8 GB RAM Virtual e Câmera 50 MP com IA, 5160 mAh, Tela de 6.88\' HD+ 120Hz com 4G', 1364.677, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/442776-300-300/p_60754_alta_1.png?v=638890663746870000', '279375')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/436106-300-300/a_279355_alta_1.png?v=638852635190600000" alt="Produto">
+            <div class="codigo">Cód.: 279355</div>
+            <div class="titulo">Celular Smartphone Samsung Galaxy A26 5G 256GB, 8GB RAM, Câmera de 50MP, IP67, Tela Super AMOLED 6.7", NFC, Edição AI, Octa-core - Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.048,69 por</div>
+                <div class="preco-atual">R$ 1.632,29 <span class="pix">no pix</span></div>
+                <div class="desconto">-14% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Celular Smartphone Samsung Galaxy A26 5G 256GB, 8GB RAM, Câmera de 50MP, IP67, Tela Super AMOLED 6.7\', NFC, Edição AI, Octa-core - Preto', 1632.2926999999997, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/436106-300-300/a_279355_alta_1.png?v=638852635190600000', '279355')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/445455-300-300/a_279361_alta_1.png?v=638907097897700000" alt="Produto">
+            <div class="codigo">Cód.: 279361</div>
+            <div class="titulo">Smartphone Motorola G56 XT2523-2, 5G 256GB, Tela 6,7", 8GB RAM + 8GB RAM Boost|Verde</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.037,80 por</div>
+                <div class="preco-atual">R$ 1.576,81 <span class="pix">no pix</span></div>
+                <div class="desconto">-17% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Motorola G56 XT2523-2, 5G 256GB, Tela 6,7\', 8GB RAM + 8GB RAM Boost|Verde', 1576.8142, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/445455-300-300/a_279361_alta_1.png?v=638907097897700000', '279361')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/413894-300-300/a-279314-alta-1.jpg?v=638715879795800000" alt="Produto">
+            <div class="codigo">Cód.: 279314</div>
+            <div class="titulo">Samsung Galaxy A16 Tela 6.7" Super AMOLED, 128GB, 4GB, Helio G99, Câmera 50MP, Selfie 13MP, Bateria 5.000mAh, NFC, Knox Vault, Cinza</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.718,36 por</div>
+                <div class="preco-atual">R$ 1.081,75 <span class="pix">no pix</span></div>
+                <div class="desconto">-32% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Galaxy A16 Tela 6.7\' Super AMOLED, 128GB, 4GB, Helio G99, Câmera 50MP, Selfie 13MP, Bateria 5.000mAh, NFC, Knox Vault, Cinza', 1081.7548, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/413894-300-300/a-279314-alta-1.jpg?v=638715879795800000', '279314')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418405-300-300/a_279305_alta_1.jpg?v=638828417525870000" alt="Produto">
+            <div class="codigo">Cód.: 279305</div>
+            <div class="titulo">Smartphone Motorola G35 XT2433-1, 5G, 128GB, 12GB (4GB RAM +8GB RAM Boost), Android 14 | Grafite</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.524,76 por</div>
+                <div class="preco-atual">R$ 1.035,05 <span class="pix">no pix</span></div>
+                <div class="desconto">-27% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Motorola G35 XT2433-1, 5G, 128GB, 12GB (4GB RAM +8GB RAM Boost), Android 14 | Grafite', 1035.0488, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418405-300-300/a_279305_alta_1.jpg?v=638828417525870000', '279305')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418443-300-300/a_279306_alta_1.jpg?v=638828417448800000" alt="Produto">
+            <div class="codigo">Cód.: 279306</div>
+            <div class="titulo">Smartphone Motorola G35 XT2433-1, 5G, 128GB, 12GB (4GB RAM +8GB RAM Boost), Android 14 | Verde</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.524,76 por</div>
+                <div class="preco-atual">R$ 1.038,15 <span class="pix">no pix</span></div>
+                <div class="desconto">-27% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Motorola G35 XT2433-1, 5G, 128GB, 12GB (4GB RAM +8GB RAM Boost), Android 14 | Verde', 1038.1464, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418443-300-300/a_279306_alta_1.jpg?v=638828417448800000', '279306')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/425199-300-300/a_279338_alta_1.jpg?v=638828409912700000" alt="Produto">
+            <div class="codigo">Cód.: 279338</div>
+            <div class="titulo">Smartphone Samsung Galaxy A36 5G, 256GB, 8GB RAM, bateria 5000mAh, Câmera Tripla Traseira de até 50MP, Snapdragon, Tela 6.7", Dual Chip, Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.898,11 por</div>
+                <div class="preco-atual">R$ 2.026,53 <span class="pix">no pix</span></div>
+                <div class="desconto">-25% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Samsung Galaxy A36 5G, 256GB, 8GB RAM, bateria 5000mAh, Câmera Tripla Traseira de até 50MP, Snapdragon, Tela 6.7\', Dual Chip, Preto', 2026.5349, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/425199-300-300/a_279338_alta_1.jpg?v=638828409912700000', '279338')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/436878-300-300/a_279356_alta_1.png?v=638856176136170000" alt="Produto">
+            <div class="codigo">Cód.: 279356</div>
+            <div class="titulo">Celular Smartphone Samsung Galaxy A26 5G 256GB, 8GB RAM, Câmera de 50MP, IP67, Tela Super AMOLED 6.7", NFC, Edição AI, Octa-core - Branco</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.047,48 por</div>
+                <div class="preco-atual">R$ 1.631,99 <span class="pix">no pix</span></div>
+                <div class="desconto">-14% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Celular Smartphone Samsung Galaxy A26 5G 256GB, 8GB RAM, Câmera de 50MP, IP67, Tela Super AMOLED 6.7\', NFC, Edição AI, Octa-core - Branco', 1631.9901999999997, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/436878-300-300/a_279356_alta_1.png?v=638856176136170000', '279356')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/443013-300-300/p_60750_alta_1.png?v=638892511890930000" alt="Produto">
+            <div class="codigo">Cód.: 279372</div>
+            <div class="titulo">Smartphone Xiaomi Redmi 14C, CX401AZU, 256 GB, 4 GB + 4 GB RAM Virtual e Câmera 50 MP com IA, 5160 mAh, Tela de 6.88" HD+ 120Hz com 4G</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.380,77 por</div>
+                <div class="preco-atual">R$ 1.284,65 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Xiaomi Redmi 14C, CX401AZU, 256 GB, 4 GB + 4 GB RAM Virtual e Câmera 50 MP com IA, 5160 mAh, Tela de 6.88\' HD+ 120Hz com 4G', 1284.6475999999998, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/443013-300-300/p_60750_alta_1.png?v=638892511890930000', '279372')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/443043-300-300/p_60751_alta_1.png?v=638892512309230000" alt="Produto">
+            <div class="codigo">Cód.: 279373</div>
+            <div class="titulo">Smartphone Xiaomi Redmi 14C, CX401PRE, 256 GB, 4 GB + 4 GB RAM Virtual e Câmera 50 MP com IA, 5160 mAh, Tela de 6.88" HD+ 120Hz com 4G</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.380,77 por</div>
+                <div class="preco-atual">R$ 1.284,65 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Xiaomi Redmi 14C, CX401PRE, 256 GB, 4 GB + 4 GB RAM Virtual e Câmera 50 MP com IA, 5160 mAh, Tela de 6.88\' HD+ 120Hz com 4G', 1284.6475999999998, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/443043-300-300/p_60751_alta_1.png?v=638892512309230000', '279373')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/419027-300-300/a_279333_alta_1.jpg?v=638828408844600000" alt="Produto">
+            <div class="codigo">Cód.: 279333</div>
+            <div class="titulo">Smartphone Samsung Galaxy S25, 5g, 256GB, 12GB RAM, Galaxy AI, Câmera Tripla Traseira de 50+12+10MP, Tela Grande de 6.2", Dual Chip, Azul Marinho</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 7.997,05 por</div>
+                <div class="preco-atual">R$ 7.454,23 <span class="pix">no pix</span></div>
+                <div class="desconto">-7% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Samsung Galaxy S25, 5g, 256GB, 12GB RAM, Galaxy AI, Câmera Tripla Traseira de 50+12+10MP, Tela Grande de 6.2\', Dual Chip, Azul Marinho', 7454.2319, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/419027-300-300/a_279333_alta_1.jpg?v=638828408844600000', '279333')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/442825-300-300/p_60756_alta_1.jpg?v=638892509217270000" alt="Produto">
+            <div class="codigo">Cód.: 279376</div>
+            <div class="titulo">Smartphone Xiaomi POCO C75, CX414DRD, 256 GB, 8 GB + 8 GB RAM Virtual e Câmera 50 MP com IA, 5160 mAh, Tela de 6.88" HD+ 120Hz com 4G</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.466,68 por</div>
+                <div class="preco-atual">R$ 1.364,68 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Xiaomi POCO C75, CX414DRD, 256 GB, 8 GB + 8 GB RAM Virtual e Câmera 50 MP com IA, 5160 mAh, Tela de 6.88\' HD+ 120Hz com 4G', 1364.677, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/442825-300-300/p_60756_alta_1.jpg?v=638892509217270000', '279376')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418523-300-300/a_279308_alta_1.jpg?v=638828406029570000" alt="Produto">
+            <div class="codigo">Cód.: 279308</div>
+            <div class="titulo">Smartphone Motorola G35 XT2433-2, 5G, 256GB, 12GB (4GB RAM +8GB RAM Boost), Android 14 | Coral</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.830,89 por</div>
+                <div class="preco-atual">R$ 1.177,19 <span class="pix">no pix</span></div>
+                <div class="desconto">-31% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Motorola G35 XT2433-2, 5G, 256GB, 12GB (4GB RAM +8GB RAM Boost), Android 14 | Coral', 1177.1875, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418523-300-300/a_279308_alta_1.jpg?v=638828406029570000', '279308')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/445628-300-300/a_279374_alta_1.png?v=638911327129500000" alt="Produto">
+            <div class="codigo">Cód.: 279374</div>
+            <div class="titulo">Smartphone Xiaomi Redmi Note 14, CX403PRE, 256 GB, 8 GB + 8 GB RAM Virtual e Câmera 108 MP com IA, 5500 mAh, Tela de 6.67" FHD+ 120Hz com 4G</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.026,91 por</div>
+                <div class="preco-atual">R$ 1.884,86 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Xiaomi Redmi Note 14, CX403PRE, 256 GB, 8 GB + 8 GB RAM Virtual e Câmera 108 MP com IA, 5500 mAh, Tela de 6.67\' FHD+ 120Hz com 4G', 1884.8559999999998, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/445628-300-300/a_279374_alta_1.png?v=638911327129500000', '279374')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/440358-300-300/a_279364_alta_1.png?v=638874815867970000" alt="Produto">
+            <div class="codigo">Cód.: 279364</div>
+            <div class="titulo">Smartphone Motorola Edge 60 Fusion XT2503-1, 5G, Tela 6.7", 256GB, 8GB + 8GB RAM Boost|Rosa</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 3.055,41 por</div>
+                <div class="preco-atual">R$ 2.380,84 <span class="pix">no pix</span></div>
+                <div class="desconto">-16% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Motorola Edge 60 Fusion XT2503-1, 5G, Tela 6.7\', 256GB, 8GB + 8GB RAM Boost|Rosa', 2380.835, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/440358-300-300/a_279364_alta_1.png?v=638874815867970000', '279364')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/423928-300-300/a_279342_alta_1.jpg?v=638780082250300000" alt="Produto">
+            <div class="codigo">Cód.: 279342</div>
+            <div class="titulo">Samsung Galaxy A56 5G, 256GB, 8GB RAM, bateria 5000mAh, Câmera Tripla Traseira até 50MP, Processador Exynos, tela 6.7", Dual Chip, Cinza</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 3.379,69 por</div>
+                <div class="preco-atual">R$ 2.748,08 <span class="pix">no pix</span></div>
+                <div class="desconto">-13% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Galaxy A56 5G, 256GB, 8GB RAM, bateria 5000mAh, Câmera Tripla Traseira até 50MP, Processador Exynos, tela 6.7\', Dual Chip, Cinza', 2748.0821, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/423928-300-300/a_279342_alta_1.jpg?v=638780082250300000', '279342')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/357088-300-300/a_279248_alta_1.png?v=638411199325330000" alt="Produto">
+            <div class="codigo">Cód.: 279248</div>
+            <div class="titulo">Smartphone Samsung Galaxy S24, 256GB, 8GB de RAM, Galaxy AI, Câmera 50MP, Selfie de 12MP, Tela de 6.2" 1-120Hz | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 5.208,00 por</div>
+                <div class="preco-atual">R$ 4.257,13 <span class="pix">no pix</span></div>
+                <div class="desconto">-12% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Samsung Galaxy S24, 256GB, 8GB de RAM, Galaxy AI, Câmera 50MP, Selfie de 12MP, Tela de 6.2\' 1-120Hz | Preto', 4257.1336, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/357088-300-300/a_279248_alta_1.png?v=638411199325330000', '279248')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/440278-300-300/a_279362_alta_1.png?v=638873487068100000" alt="Produto">
+            <div class="codigo">Cód.: 279362</div>
+            <div class="titulo">Smartphone Motorola G86 XT2527-1, 5G, 256 GB, 8GB RAM + 8GB RAM Boost, Tela de 6.6"|Vermelho</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.547,21 por</div>
+                <div class="preco-atual">R$ 2.115,30 <span class="pix">no pix</span></div>
+                <div class="desconto">-11% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Motorola G86 XT2527-1, 5G, 256 GB, 8GB RAM + 8GB RAM Boost, Tela de 6.6\'|Vermelho', 2115.3005, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/440278-300-300/a_279362_alta_1.png?v=638873487068100000', '279362')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/425254-300-300/a_279350_alta_1.jpg?v=638788516504670000" alt="Produto">
+            <div class="codigo">Cód.: 279350</div>
+            <div class="titulo">Samsung Galaxy A56 5G, 128GB, 8GB RAM, bateria 5000mAh, Câmera Tripla Traseira até 50MP, Processador Exynos, tela 6.7", Dual Chip, Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.899,32 por</div>
+                <div class="preco-atual">R$ 2.335,69 <span class="pix">no pix</span></div>
+                <div class="desconto">-13% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Galaxy A56 5G, 128GB, 8GB RAM, bateria 5000mAh, Câmera Tripla Traseira até 50MP, Processador Exynos, tela 6.7\', Dual Chip, Preto', 2335.6899, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/425254-300-300/a_279350_alta_1.jpg?v=638788516504670000', '279350')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/366053-300-300/a_279280_alta_1.png?v=638479206935600000" alt="Produto">
+            <div class="codigo">Cód.: 279280</div>
+            <div class="titulo">Smartphone Samsung Galaxy A55 5G, 256GB, 8GB RAM, Tela Super AMOLED 6.6" 120Hz | Azul Escuro</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 3.749,95 por</div>
+                <div class="preco-atual">R$ 3.229,19 <span class="pix">no pix</span></div>
+                <div class="desconto">-7% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Samsung Galaxy A55 5G, 256GB, 8GB RAM, Tela Super AMOLED 6.6\' 120Hz | Azul Escuro', 3229.1901999999995, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/366053-300-300/a_279280_alta_1.png?v=638479206935600000', '279280')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/417991-300-300/a_279331_alta_1.jpg?v=638743599682900000" alt="Produto">
+            <div class="codigo">Cód.: 279331</div>
+            <div class="titulo">Smartphone Samsung Galaxy S25, 5G, 512GB, 12GB RAM, Galaxy AI, Câmera Tripla de 50+12+10, Tela Grande de 6.7", Dual Chip, SM-S936B/DS Prata</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 10.521,11 por</div>
+                <div class="preco-atual">R$ 9.098,89 <span class="pix">no pix</span></div>
+                <div class="desconto">-7% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Samsung Galaxy S25, 5G, 512GB, 12GB RAM, Galaxy AI, Câmera Tripla de 50+12+10, Tela Grande de 6.7\', Dual Chip, SM-S936B/DS Prata', 9098.8881, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/417991-300-300/a_279331_alta_1.jpg?v=638743599682900000', '279331')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/417651-300-300/a_279324_alta_1.jpg?v=638741989338330000" alt="Produto">
+            <div class="codigo">Cód.: 279324</div>
+            <div class="titulo">Smartphone Samsung Galaxy A16 5G, 256GB, 8GB RAM, Processador Exynos 1330, Câmera Tripla Traseira de até 50MP, Tela AMOLED Azul Escuro</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.228,98 por</div>
+                <div class="preco-atual">R$ 1.558,33 <span class="pix">no pix</span></div>
+                <div class="desconto">-25% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Samsung Galaxy A16 5G, 256GB, 8GB RAM, Processador Exynos 1330, Câmera Tripla Traseira de até 50MP, Tela AMOLED Azul Escuro', 1558.3254, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/417651-300-300/a_279324_alta_1.jpg?v=638741989338330000', '279324')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/440255-300-300/a_279366_alta_1.png?v=638873486225230000" alt="Produto">
+            <div class="codigo">Cód.: 279366</div>
+            <div class="titulo">Smartphone Motorola Edge 60 PRO, 5G, 256GB, Tela 6,7", 12GB RAM + 12GB RAM Boost|Violeta</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 4.073,02 por</div>
+                <div class="preco-atual">R$ 3.277,26 <span class="pix">no pix</span></div>
+                <div class="desconto">-14% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Motorola Edge 60 PRO, 5G, 256GB, Tela 6,7\', 12GB RAM + 12GB RAM Boost|Violeta', 3277.2634999999996, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/440255-300-300/a_279366_alta_1.png?v=638873486225230000', '279366')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/425237-300-300/a_279349_alta_1.jpg?v=638787904003400000" alt="Produto">
+            <div class="codigo">Cód.: 279349</div>
+            <div class="titulo">Samsung Galaxy A56 5G, 128GB, 8GB RAM, bateria 5000mAh, Câmera Tripla Traseira até 50MP, Processador Exynos, tela 6.7", Dual Chip, Cinza</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.899,32 por</div>
+                <div class="preco-atual">R$ 2.335,69 <span class="pix">no pix</span></div>
+                <div class="desconto">-13% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Galaxy A56 5G, 128GB, 8GB RAM, bateria 5000mAh, Câmera Tripla Traseira até 50MP, Processador Exynos, tela 6.7\', Dual Chip, Cinza', 2335.6899, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/425237-300-300/a_279349_alta_1.jpg?v=638787904003400000', '279349')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/413820-300-300/a-279319-alta-1.jpg?v=638715879384530000" alt="Produto">
+            <div class="codigo">Cód.: 279319</div>
+            <div class="titulo">Samsung Galaxy A16 5G Tela 6.7" Super AMOLED 90Hz, 128GB, 4GB, Exynos 1330, Câmera Tripla 50MP, IP54, Bateria 5.000mAh, NFC, Verde</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.775,23 por</div>
+                <div class="preco-atual">R$ 1.189,29 <span class="pix">no pix</span></div>
+                <div class="desconto">-28% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Galaxy A16 5G Tela 6.7\' Super AMOLED 90Hz, 128GB, 4GB, Exynos 1330, Câmera Tripla 50MP, IP54, Bateria 5.000mAh, NFC, Verde', 1189.2875, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/413820-300-300/a-279319-alta-1.jpg?v=638715879384530000', '279319')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418029-300-300/a_279332_alta_1.jpg?v=638743600009200000" alt="Produto">
+            <div class="codigo">Cód.: 279332</div>
+            <div class="titulo">Smartphone Samsung Galaxy S25 Ultra S938, 5G, 512GB, 12GB RAM, Câmera Quádrupla de 200+50+10+50, Tela Grande de 6.9", Dual Chip, Preto Titanium</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 14.396,74 por</div>
+                <div class="preco-atual">R$ 12.457,62 <span class="pix">no pix</span></div>
+                <div class="desconto">-7% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Samsung Galaxy S25 Ultra S938, 5G, 512GB, 12GB RAM, Câmera Quádrupla de 200+50+10+50, Tela Grande de 6.9\', Dual Chip, Preto Titanium', 12457.618199999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418029-300-300/a_279332_alta_1.jpg?v=638743600009200000', '279332')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/395346-300-300/a_279295_alta_1.jpg?v=638622871350330000" alt="Produto">
+            <div class="codigo">Cód.: 279295</div>
+            <div class="titulo">Smartphone Samsung Galaxy A06, tela 6.7", 128GB, 4GB RAM | Branco</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.051,46 por</div>
+                <div class="preco-atual">R$ 746,14 <span class="pix">no pix</span></div>
+                <div class="desconto">-24% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Samsung Galaxy A06, tela 6.7\', 128GB, 4GB RAM | Branco', 746.1370999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/395346-300-300/a_279295_alta_1.jpg?v=638622871350330000', '279295')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/440356-300-300/a_279368_alta_1.png?v=638874815820430000" alt="Produto">
+            <div class="codigo">Cód.: 279368</div>
+            <div class="titulo">Smartphone Motorola Razr 60 Ultra XT2551-6, 1TB, 16GB RAM + 16GB RAM Boost, Tela 7.0"|Vermelho</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 10.176,26 por</div>
+                <div class="preco-atual">R$ 8.968,29 <span class="pix">no pix</span></div>
+                <div class="desconto">-5% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Motorola Razr 60 Ultra XT2551-6, 1TB, 16GB RAM + 16GB RAM Boost, Tela 7.0\'|Vermelho', 8968.2928, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/440356-300-300/a_279368_alta_1.png?v=638874815820430000', '279368')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/417392-300-300/a_279328_alta_1.jpg?v=638738696284300000" alt="Produto">
+            <div class="codigo">Cód.: 279328</div>
+            <div class="titulo">Smartphone Samsung Galaxy S25 Ultra S938, 5G, 512GB, 12GB RAM, Câmera Quádrupla de 200+50+10+50, Tela Grande de 6.9", Dual Chip, Titânio Cinza</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 14.326,56 por</div>
+                <div class="preco-atual">R$ 12.395,47 <span class="pix">no pix</span></div>
+                <div class="desconto">-7% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Samsung Galaxy S25 Ultra S938, 5G, 512GB, 12GB RAM, Câmera Quádrupla de 200+50+10+50, Tela Grande de 6.9\', Dual Chip, Titânio Cinza', 12395.4726, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/417392-300-300/a_279328_alta_1.jpg?v=638738696284300000', '279328')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/395310-300-300/a_279296_alta_1.jpg?v=638622871090030000" alt="Produto">
+            <div class="codigo">Cód.: 279296</div>
+            <div class="titulo">Smartphone Samsung Galaxy A06 com tela de 6.7", 128GB | Azul Escuro</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.050,19 por</div>
+                <div class="preco-atual">R$ 745,04 <span class="pix">no pix</span></div>
+                <div class="desconto">-24% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Samsung Galaxy A06 com tela de 6.7\', 128GB | Azul Escuro', 745.0360000000001, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/395310-300-300/a_279296_alta_1.jpg?v=638622871090030000', '279296')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/440320-300-300/a_279369_alta_1.png?v=638873492394500000" alt="Produto">
+            <div class="codigo">Cód.: 279369</div>
+            <div class="titulo">Smartphone Motorola Razr 60 Ultra XT2551-6, 1TB, 16GB RAM + 16GB RAM Boost, Tela 7.0"|Madeira</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 10.176,26 por</div>
+                <div class="preco-atual">R$ 8.968,29 <span class="pix">no pix</span></div>
+                <div class="desconto">-5% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smartphone Motorola Razr 60 Ultra XT2551-6, 1TB, 16GB RAM + 16GB RAM Boost, Tela 7.0\'|Madeira', 8968.2928, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/440320-300-300/a_279369_alta_1.png?v=638873492394500000', '279369')">Adicionar ao Carrinho</button>        </div>
+
+    </div>
+
+    <script>
+        // ====== CARRINHO ======
+        let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+
+        function salvarCarrinho() {
+            localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        }
+
+        function atualizarContador() {
+            const count = carrinho.reduce((acc, item) => acc + item.qtd, 0);
+            document.getElementById('cart-count').textContent = count;
+        }
+
+        function animarCarrinho() {
+            const icon = document.getElementById('cart-icon');
+            icon.classList.add('bounce');
+            setTimeout(() => icon.classList.remove('bounce'), 400);
+        }
+
+      /*  function adicionarCarrinho(titulo, preco, imagem) {
+            const item = carrinho.find(p => p.titulo === titulo);
+            if (item) {
+                item.qtd += 1;
+            } else {
+                carrinho.push({ titulo, preco, imagem, qtd: 1 });
+            }
+            salvarCarrinho();
+            atualizarContador();
+            animarCarrinho();
+            atualizarDropdown();
+        }*/
+
+        function adicionarCarrinho(titulo, preco, imagem, codigo = '') {
+            const item = carrinho.find(p => (codigo ? p.codigo === codigo : p.titulo === titulo));
+            if (item) {
+                item.qtd += 1;
+            } else {
+                carrinho.push({ titulo, preco, imagem, codigo, qtd: 1 });
+            }
+            salvarCarrinho();
+            atualizarContador();
+            animarCarrinho();
+            atualizarDropdown();
+        }
+
+        function alterarQtd(index, valor) {
+            carrinho[index].qtd += valor;
+            if (carrinho[index].qtd <= 0) {
+                carrinho.splice(index, 1);
+            }
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+        function removerProduto(index) {
+            carrinho.splice(index, 1);
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+        function atualizarDropdown() {
+            const container = document.getElementById('cart-items');
+            container.innerHTML = '';
+            let total = 0;
+
+            carrinho.forEach((item, index) => {
+                total += item.preco * item.qtd;
+                container.innerHTML += `
+                    <div class="cart-item">
+                        <img src="${item.imagem}" alt="${item.titulo}">
+                        <div class="cart-item-info">
+                            <div class="codigo">${item.codigo ? item.codigo : ''}</div>
+                            <div>${item.titulo}</div>
+                            <div class="cart-controls">
+                                <button onclick="alterarQtd(${index}, -1)">-</button>
+                                <input type="number" min="0" value="${item.qtd}" onchange="alterarQtdInput(${index}, this.value)" style="width: 50px; text-align: center; font-size:16px;">
+                                <button onclick="alterarQtd(${index}, 1)">+</button>
+                                <button class="remove-btn" onclick="removerProduto(${index})">🗑️</button>
+                            </div>
+                            <div>${(item.preco * item.qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('cart-total').textContent =`Total: R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function alterarQtdInput(index, valor) {
+            valor = parseInt(valor);
+            if (isNaN(valor) || valor < 0) valor = 0;
+
+            if (valor === 0) {
+                carrinho.splice(index, 1); // remove se 0
+            } else {
+                carrinho[index].qtd = valor;
+            }
+
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+
+        function toggleCarrinho() {
+            const drop = document.getElementById('cart-dropdown');
+            const isOpen = getComputedStyle(drop).display !== 'none';
+            drop.style.display = isOpen ? 'none' : 'flex';
+        }
+
+        // ====== CONTROLE DE ABRIR/FECHAR ======
+        // Não fechar ao clicar dentro do menu
+        document.getElementById('cart-dropdown').addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+
+        // IMPORTANTE: como já existe onclick="toggleCarrinho()" no HTML,
+        // aqui só paramos a propagação para não disparar o listener do documento.
+        document.getElementById('cart-icon').addEventListener('click', function (e) {
+            e.stopPropagation();
+            // não chama toggleCarrinho() aqui para evitar duplo toggle
+        });
+
+        // Fecha apenas se clicar fora do ícone e do menu
+        document.addEventListener('click', function (event) {
+            const drop = document.getElementById('cart-dropdown');
+            const icon = document.getElementById('cart-icon');
+            if (!drop.contains(event.target) && !icon.contains(event.target)) {
+                drop.style.display = 'none';
+            }
+        });
+
+        
+      /*  function finalizarCompra() {
+            alert('Compra finalizada!');
+            carrinho = [];
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+            document.getElementById('cart-dropdown').style.display = 'none';
+        }*/
+
+function mostrarSucesso(mensagem) {
+    let aviso = document.createElement('div');
+    aviso.className = 'sucesso-tooltip';
+    aviso.textContent = mensagem;
+    document.body.appendChild(aviso);
+
+    // Exibir com animação
+    setTimeout(() => aviso.classList.add('show'), 10);
+
+    // Remover após 3,5s
+    setTimeout(() => {
+        aviso.classList.remove('show');
+        setTimeout(() => aviso.remove(), 400); // esperar terminar animação
+    }, 3500);
+}
+
+    function finalizarCompra() {
+        let total = carrinho.reduce((acc, item) => acc + item.preco * item.qtd, 0);
+        const botao = document.querySelector('.finalizar');
+
+        // Remove tooltip antiga se existir
+        let oldTooltip = document.querySelector('.finalizar-tooltip');
+        if (oldTooltip) oldTooltip.remove();
+
+        if (total < 500) {
+            // Criar tooltip para valor mínimo
+            let tooltip = document.createElement('div');
+            tooltip.classList.add('finalizar-tooltip');
+            tooltip.textContent = 'O valor mínimo para finalizar a compra é R$500,00';
+            botao.appendChild(tooltip);
+
+            setTimeout(() => tooltip.classList.add('show'), 10);
+            setTimeout(() => tooltip.classList.remove('show'), 3500);
+            setTimeout(() => tooltip.remove(), 3500);
+            return;
+        }
+
+        // Enviar pedido para o Flask
+        fetch('http://127.0.0.1:5000/finalizar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ total: total, itens: carrinho })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Mostrar sucesso usando sua função CSS
+            mostrarSucesso(`Pedido enviado com sucesso! ID: ${data.pedido_id}`);
+
+            // Limpar carrinho e atualizar
+            carrinho = [];
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+            document.getElementById('cart-dropdown').style.display = 'none';
+        })
+        .catch(err => {
+            let erroTooltip = document.createElement('div');
+            erroTooltip.classList.add('finalizar-tooltip');
+            erroTooltip.textContent = 'Erro ao enviar pedido. Tente novamente!';
+            botao.appendChild(erroTooltip);
+
+            setTimeout(() => erroTooltip.classList.add('show'), 10);
+            setTimeout(() => erroTooltip.classList.remove('show'), 3500);
+            setTimeout(() => erroTooltip.remove(), 3500);
+
+            console.error('Erro ao enviar pedido:', err);
+        });
+    }
+  
+        // Inicialização
+        atualizarContador();
+        atualizarDropdown();
+    </script>
+</body>
+</html>
