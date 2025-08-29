@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Partes e peças</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f4f6f8;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        h1 {
+            color: #000;
+            text-transform: uppercase;
+            margin: 0;    
+        }
+
+        .titulo_nome {
+        font-family: 'Story_Script';
+        font-size: 35px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin: 0;
+        }
+
+        .titulo_nome a {
+        text-decoration: none;
+        background: linear-gradient(270deg, #050c4e, #012b30, #01162e, #021d1b, #020f33);
+        background-size: 600% 600%;
+        -webkit-background-clip:text;
+        -webkit-text-fill-color: transparent;
+        animation: gradientShift 12s ease infinite;
+        transition: text-shadow 0.5s;
+        display: inline-block;
+        }
+
+        @keyframes gradientShift {
+        0% { background-position: 0% 50%; }  
+        50% { background-position: 100% 50%; }  
+        100% { background-position: 0% 50%; }  
+        }        
+
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0; /* garante que ocupe até o fim */
+            width: 100%;
+            background: #fff;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            z-index: 1000;
+            flex-wrap: wrap;
+            gap: 10px;
+            box-sizing: border-box; /* impede que padding estoure a largura */
+        }
+
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 24px;
+            margin-right: 10px;
+            margin-top: 8px;
+        }
+
+        .cart-icon img {
+            width: 34px;
+            transition: transform 0.2s ease;
+        }
+
+        .cart-icon.bounce img {
+            transform: scale(1.3);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            background: red;
+            color: white;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* Dropdown do carrinho */
+        .cart-dropdown {
+            display: none;                 /* começa oculto */
+            position: fixed;
+            top: 60px;                     /* logo abaixo do header */
+            right: 0;
+            width: 400px;
+            height: calc(100vh - 60px);    /* altura total visível */
+            background: white;
+            border-radius: 8px 0 0 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            padding: 10px;
+            z-index: 2000;
+            /* quando abrir via JS, usaremos display:flex */
+            flex-direction: column;
+        }
+
+        #cart-items {
+            overflow-y: auto;      /* rolagem só aqui */
+            flex: 1;               /* ocupa o espaço disponível */
+            display: block;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .cart-item img {
+            width: 90px;
+            height: 90%;
+            object-fit: contain;
+        }
+        .cart-item-info {
+            flex: 1;
+            font-size: 13px;
+        }
+        .cart-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .cart-controls button {
+            border: none;
+            background: #ddd;
+            padding: 4px 8px; 
+            cursor: pointer;
+            font-size: 15px; /*aumenta o tamanho do + - e da lixeira*/
+            border-radius: 4px;
+        }
+        .remove-btn {
+            background: red;
+            color: white;
+        }
+        .cart-total {
+           font-weight: bold;
+            margin-top: 10px;
+            text-align: right;
+
+            position: sticky;   /* fixa dentro do scroller */
+            bottom: 52px;       /* espaço para o botão (ajusto dinamicamente no JS também) */
+            background: white;
+            padding: 8px 0;
+            z-index: 1;
+        }
+        .cart-dropdown button.finalizar {
+            flex-shrink: 0;
+            width: 100%;
+            padding: 12px;      /* um pouco mais alto */
+            background: #0aa030;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+            font-weight: bold;
+
+            position: sticky;   /* fica colado no fundo do scroller */
+            bottom: 12px;
+            z-index: 2;
+        }
+
+                        /* Tooltip de aviso do botão finalizar */
+        .finalizar-tooltip {
+            position: absolute;
+            background: #ff4d4f;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            top: -58px;       /* acima do botão */
+            left: 0;
+            opacity: 0;
+            transform: translateY(0);
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            white-space: nowrap;
+            z-index: 3000;
+        }
+        .finalizar-tooltip.show {
+            opacity: 1;
+            transform: translateY(-10px);
+        }
+
+        .sucesso-tooltip {
+            position: fixed;
+            background: #0aa030;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            top: 18%; 
+            left: 50%; 
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            z-index: 4000;
+            white-space: nowrap;
+        }
+
+        .sucesso-tooltip.show {
+            opacity: 1;
+            transform: translate(-50%, -20%);
+        }
+
+                        /* Remove setas do input number */
+        .cart-controls input[type="number"]::-webkit-outer-spin-button,
+        .cart-controls input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .cart-controls input[type="number"] {
+            font-size: 16px;
+            width: 50px;
+            text-align: center;
+            border-radius: 6px;
+            border: 1px solid #bbb;
+            padding: 4px 6px;
+            background-color: #f9f9f9;
+            font-family: 'Arial', sans-serif; /* você pode trocar para outra fonte bonita */
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+
+        .cart-controls input[type="number"]:focus {
+            outline: none;
+            border-color: #0a9b43;
+            box-shadow: 0 0 4px #0a9b43;
+        }
+
+        .produto {
+            background: #fff;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            width: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s;
+        }
+
+        .produto:hover {
+            transform: translateY(-5px);
+        }
+
+        .produto img {
+            width: 100%;
+            border-bottom: 1px solid rgb(114, 107, 107);
+            object-fit: contain;
+            background: #f0f0f0;
+        }
+
+        .codigo {
+            font-size: 13px;
+            color: #555;
+            margin-top: 8px;
+        }
+
+        .titulo {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 7px 0 12px 0;
+            color: #202020;
+            height: auto;
+        }
+
+        .precos {
+            text-align: right;
+            margin-top: auto;
+        }
+
+        .preco-atual {
+            color: #0a9b43;
+            font-weight: bold;
+            font-size: 21px;
+        }
+
+        .preco-antigo {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .desconto {
+            color: #1bbf00;
+            background-color: #e6ffe6;
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .pix {
+            font-size: 13px;
+            color: #777;
+        }
+
+        .add-btn {
+            margin-top: 10px;
+            padding: 8px;
+            background: #0a9b43;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .add-btn:hover {
+            background: #0d7e39;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 class="titulo_nome"><a href="main.html">🛒 Partes e peças</a></h1>
+        <div class="cart-icon" onclick="toggleCarrinho()" id="cart-icon">
+            <img src="https://cdn-icons-png.flaticon.com/512/1170/1170678.png" alt="Carrinho">
+            <div class="cart-count" id="cart-count">0</div>
+
+            <div class="cart-dropdown" id="cart-dropdown">
+                <div id="cart-items"></div>
+                <div class="cart-total" id="cart-total">Total: R$ 0,00</div>
+                <button class="finalizar" onclick="finalizarCompra()">Finalizar</button>
+            </div>
+        </div>
+    </header>
+
+    <div style="margin-top:80px; display:flex; flex-wrap:wrap; justify-content:center; width:100%;">
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/375153-300-300/p_59072_alta_1.png?v=638522361441330000" alt="Produto">
+            <div class="codigo">Cód.: 801442</div>
+            <div class="titulo">Fonte VXPRO VX230SE Sem Cabo | 230W</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 62,38 por</div>
+                <div class="preco-atual">R$ 55,94 <span class="pix">no pix</span></div>
+                <div class="desconto">-5% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Fonte VXPRO VX230SE Sem Cabo | 230W', 55.941, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/375153-300-300/p_59072_alta_1.png?v=638522361441330000', '801442')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/437137-300-300/p_60535_alta_2.jpg?v=638857634635200000" alt="Produto">
+            <div class="codigo">Cód.: 801733</div>
+            <div class="titulo">Fonte de Alimentação Duex 500W DX500FSE PFC | Bivolt</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 185,34 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Fonte de Alimentação Duex 500W DX500FSE PFC | Bivolt', 185.33839999999998, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/437137-300-300/p_60535_alta_2.jpg?v=638857634635200000', '801733')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/258388-300-300/p_49336_alta_4.jpg?v=637923703418070000" alt="Produto">
+            <div class="codigo">Cód.: 801163</div>
+            <div class="titulo">SSD Kingston SA400S37 | 480GB</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 377,50 por</div>
+                <div class="preco-atual">R$ 277,48 <span class="pix">no pix</span></div>
+                <div class="desconto">-21% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('SSD Kingston SA400S37 | 480GB', 277.4799, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/258388-300-300/p_49336_alta_4.jpg?v=637923703418070000', '801163')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435566-300-300/a_801737_alta_1.jpg?v=638847506076100000" alt="Produto">
+            <div class="codigo">Cód.: 801737</div>
+            <div class="titulo">Gabinete Gamer Duex DX255-4, ATX, Micro-ATX, Mini-ITX, Sem Fonte/ Fan</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 107,64 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Gabinete Gamer Duex DX255-4, ATX, Micro-ATX, Mini-ITX, Sem Fonte/ Fan', 107.6443, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435566-300-300/a_801737_alta_1.jpg?v=638847506076100000', '801737')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/420450-300-300/p_60174_alta_1.jpg?v=638762585043830000" alt="Produto">
+            <div class="codigo">Cód.: 801686</div>
+            <div class="titulo">Fonte Gigabyte P650G 650W, 80 Plus Gold</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 508,01 por</div>
+                <div class="preco-atual">R$ 432,37 <span class="pix">no pix</span></div>
+                <div class="desconto">-9% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Fonte Gigabyte P650G 650W, 80 Plus Gold', 432.37199999999996, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/420450-300-300/p_60174_alta_1.jpg?v=638762585043830000', '801686')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/436358-300-300/p_60547_alta_1.jpg?v=638853465262530000" alt="Produto">
+            <div class="codigo">Cód.: 801736</div>
+            <div class="titulo">Gabinete Gamer Duex DX255-8, ATX, Micro-ATX, Mini-ITX, Sem fonte, Sem Fan | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 106,34 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Gabinete Gamer Duex DX255-8, ATX, Micro-ATX, Mini-ITX, Sem fonte, Sem Fan | Preto', 106.33749999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/436358-300-300/p_60547_alta_1.jpg?v=638853465262530000', '801736')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/438183-300-300/p_60571_alta_1.png?v=638866555603700000" alt="Produto">
+            <div class="codigo">Cód.: 801732</div>
+            <div class="titulo">Processador Intel Core i7-860, 2.93GHz, 8MB, LGA 1156</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 132,36 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Processador Intel Core i7-860, 2.93GHz, 8MB, LGA 1156', 132.3646, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/438183-300-300/p_60571_alta_1.png?v=638866555603700000', '801732')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/367764-300-300/p_58790_alta_1.png?v=638482052265900000" alt="Produto">
+            <div class="codigo">Cód.: 801428</div>
+            <div class="titulo">Placa Mãe Huananzhi, Express Chipset Intel HM55, LGA 1156, ATX | DDR3</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 205,59 por</div>
+                <div class="preco-atual">R$ 174,22 <span class="pix">no pix</span></div>
+                <div class="desconto">-9% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Placa Mãe Huananzhi, Express Chipset Intel HM55, LGA 1156, ATX | DDR3', 174.21849999999998, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/367764-300-300/p_58790_alta_1.png?v=638482052265900000', '801428')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/436356-300-300/p_60544_alta_1.jpg?v=638853465205570000" alt="Produto">
+            <div class="codigo">Cód.: 801735</div>
+            <div class="titulo">Gabinete Gamer Duex DX255-10-1, ATX, Micro-ATX, Mini-ITX, Sem fonte, Sem Fan | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 106,34 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Gabinete Gamer Duex DX255-10-1, ATX, Micro-ATX, Mini-ITX, Sem fonte, Sem Fan | Preto', 106.33749999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/436356-300-300/p_60544_alta_1.jpg?v=638853465205570000', '801735')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/376481-300-300/p_59132_alta_1.jpg?v=638531045765670000" alt="Produto">
+            <div class="codigo">Cód.: 801469</div>
+            <div class="titulo">Fonte Gigabyte Ultra Durable UD850GM PG5, 850W, 80 Plus Gold, Modular, PFC Ativo | Bivolt</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.020,44 por</div>
+                <div class="preco-atual">R$ 820,21 <span class="pix">no pix</span></div>
+                <div class="desconto">-14% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Fonte Gigabyte Ultra Durable UD850GM PG5, 850W, 80 Plus Gold, Modular, PFC Ativo | Bivolt', 820.2133, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/376481-300-300/p_59132_alta_1.jpg?v=638531045765670000', '801469')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/358764-300-300/a_801398_alta_1.png?v=638424129386830000" alt="Produto">
+            <div class="codigo">Cód.: 801398</div>
+            <div class="titulo">SSD Sandisk Plus, Leitura Até 2.400 MB/s, Gravação até 1.500 MB/s | 500GB</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 338,73 por</div>
+                <div class="preco-atual">R$ 271,54 <span class="pix">no pix</span></div>
+                <div class="desconto">-14% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('SSD Sandisk Plus, Leitura Até 2.400 MB/s, Gravação até 1.500 MB/s | 500GB', 271.5388, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/358764-300-300/a_801398_alta_1.png?v=638424129386830000', '801398')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/414947-300-300/p_60025_alta_1.jpg?v=638724800383200000" alt="Produto">
+            <div class="codigo">Cód.: 801656</div>
+            <div class="titulo">Gabinete Gamer Vinik Murk M-ATX, Mid Tower, Fita de Led RGB, Lateral Acrilico - Ggmacbk Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 160,05 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Gabinete Gamer Vinik Murk M-ATX, Mid Tower, Fita de Led RGB, Lateral Acrilico - Ggmacbk Preto', 160.0494, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/414947-300-300/p_60025_alta_1.jpg?v=638724800383200000', '801656')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/376474-300-300/p_59100_alta_1.jpg?v=638531045697670000" alt="Produto">
+            <div class="codigo">Cód.: 801470</div>
+            <div class="titulo">Fonte Gigabyte Ultra Durable UD1000GM PG5, 1000W, 80 Plus Gold, Modular, PFC Ativo | Bivolt</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.257,35 por</div>
+                <div class="preco-atual">R$ 1.092,34 <span class="pix">no pix</span></div>
+                <div class="desconto">-7% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Fonte Gigabyte Ultra Durable UD1000GM PG5, 1000W, 80 Plus Gold, Modular, PFC Ativo | Bivolt', 1092.3423, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/376474-300-300/p_59100_alta_1.jpg?v=638531045697670000', '801470')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/436353-300-300/p_60539_alta_1.jpg?v=638853462351800000" alt="Produto">
+            <div class="codigo">Cód.: 801734</div>
+            <div class="titulo">Fonte de Alimentação Duex 600W DX600FSE PFC | Bivolt</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 199,79 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Fonte de Alimentação Duex 600W DX600FSE PFC | Bivolt', 199.7858, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/436353-300-300/p_60539_alta_1.jpg?v=638853462351800000', '801734')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/373874-300-300/p_59051_alta_2.jpg?v=638518327784300000" alt="Produto">
+            <div class="codigo">Cód.: 801441</div>
+            <div class="titulo">Placa Mãe Gigabyte H410M H V2, Intel, Micro ATX | DDR4</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 469,05 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Placa Mãe Gigabyte H410M H V2, Intel, Micro ATX | DDR4', 469.0471, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/373874-300-300/p_59051_alta_2.jpg?v=638518327784300000', '801441')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/180665-300-300/a_59962_alta_2.png?v=637442361140100000" alt="Produto">
+            <div class="codigo">Cód.: 59962</div>
+            <div class="titulo">Processador Intel Core i5-10400F 2.90 GHz, 10ª Geração, 12M de Cache</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 812,70 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Processador Intel Core i5-10400F 2.90 GHz, 10ª Geração, 12M de Cache', 812.6991999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/180665-300-300/a_59962_alta_2.png?v=637442361140100000', '59962')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/376546-300-300/p_59123_alta_1.jpg?v=638531049490100000" alt="Produto">
+            <div class="codigo">Cód.: 801458</div>
+            <div class="titulo">Placa Mãe Gigabyte B550M Aorus Elite, AMD AM4, Micro ATX | DDR4</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.087,01 por</div>
+                <div class="preco-atual">R$ 951,51 <span class="pix">no pix</span></div>
+                <div class="desconto">-6% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Placa Mãe Gigabyte B550M Aorus Elite, AMD AM4, Micro ATX | DDR4', 951.5104, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/376546-300-300/p_59123_alta_1.jpg?v=638531049490100000', '801458')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/414917-300-300/p_60026_alta_1.jpg?v=638724800219500000" alt="Produto">
+            <div class="codigo">Cód.: 801657</div>
+            <div class="titulo">Gabinete Gamer Vinik Wave M-ATX, Mid Tower, Lateral Acrilico - GGWACBK Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 164,83 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Gabinete Gamer Vinik Wave M-ATX, Mid Tower, Lateral Acrilico - GGWACBK Preto', 164.8289, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/414917-300-300/p_60026_alta_1.jpg?v=638724800219500000', '801657')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/410758-300-300/p_59684_alta_8.jpg?v=638693745400730000" alt="Produto">
+            <div class="codigo">Cód.: 801574</div>
+            <div class="titulo">Gabinete Hilevel, Sem Fonte, ATX, ARGB de 12 cm - LV510 | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 188,30 por</div>
+                <div class="preco-atual">R$ 137,79 <span class="pix">no pix</span></div>
+                <div class="desconto">-22% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Gabinete Hilevel, Sem Fonte, ATX, ARGB de 12 cm - LV510 | Preto', 137.78539999999998, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/410758-300-300/p_59684_alta_8.jpg?v=638693745400730000', '801574')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/358774-300-300/p_58570_alta_1.png?v=638424129498370000" alt="Produto">
+            <div class="codigo">Cód.: 801399</div>
+            <div class="titulo">SSD Sandisk Plus, Leitura Até 3.200 MB/s, Gravação até 2.500 MB/s | 1TB</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 522,29 por</div>
+                <div class="preco-atual">R$ 424,79 <span class="pix">no pix</span></div>
+                <div class="desconto">-13% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('SSD Sandisk Plus, Leitura Até 3.200 MB/s, Gravação até 2.500 MB/s | 1TB', 424.7853, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/358774-300-300/p_58570_alta_1.png?v=638424129498370000', '801399')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/176575-300-300/a_59619_alta_1.png?v=637363128130100000" alt="Produto">
+            <div class="codigo">Cód.: 59619</div>
+            <div class="titulo">Processador Intel Core i3-10100,M de cache, até 4,30 GHz, BX8070110100</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 818,73 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Processador Intel Core i3-10100,M de cache, até 4,30 GHz, BX8070110100', 818.725, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/176575-300-300/a_59619_alta_1.png?v=637363128130100000', '59619')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/376288-300-300/p_59126_alta_1.jpg?v=638530180086700000" alt="Produto">
+            <div class="codigo">Cód.: 801461</div>
+            <div class="titulo">Placa Mãe Gigabyte B760M DS3H, Intel LGA 1700, ATX | DDR5</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.206,49 por</div>
+                <div class="preco-atual">R$ 1.043,01 <span class="pix">no pix</span></div>
+                <div class="desconto">-7% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Placa Mãe Gigabyte B760M DS3H, Intel LGA 1700, ATX | DDR5', 1043.0106, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/376288-300-300/p_59126_alta_1.jpg?v=638530180086700000', '801461')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/443738-300-300/p_60668_alta_1.png?v=638895673097930000" alt="Produto">
+            <div class="codigo">Cód.: 801767</div>
+            <div class="titulo">Gabinete Gigabyte C201P Ice Mid Tower, ATX Padrão, Filtro De Poeira: Superior, Inferior E Lateral, Suporte A | Branco</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 631,28 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Gabinete Gigabyte C201P Ice Mid Tower, ATX Padrão, Filtro De Poeira: Superior, Inferior E Lateral, Suporte A | Branco', 631.2839, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/443738-300-300/p_60668_alta_1.png?v=638895673097930000', '801767')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/422328-300-300/p_60178_alta_1.jpg?v=638772972113500000" alt="Produto">
+            <div class="codigo">Cód.: 801692</div>
+            <div class="titulo">Gabinete Gamer Gigabyte C301 Glass, RGB, Mid-Tower, Lateral de Vidro, 4 Fans | Branco</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 725,59 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Gabinete Gamer Gigabyte C301 Glass, RGB, Mid-Tower, Lateral de Vidro, 4 Fans | Branco', 725.5912999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/422328-300-300/p_60178_alta_1.jpg?v=638772972113500000', '801692')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/406653-300-300/p_59724_alta_1.jpg?v=638671279417700000" alt="Produto">
+            <div class="codigo">Cód.: 801616</div>
+            <div class="titulo">Processador Intel Core i5-14600KF, 3,5GHz até 5.3GHz Max Turbo, Cache 24MB, 14 Núcleos, 20 Threads, LGA 1700 - BX8071514600KF</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.339,09 por</div>
+                <div class="preco-atual">R$ 2.068,46 <span class="pix">no pix</span></div>
+                <div class="desconto">-5% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Processador Intel Core i5-14600KF, 3,5GHz até 5.3GHz Max Turbo, Cache 24MB, 14 Núcleos, 20 Threads, LGA 1700 - BX8071514600KF', 2068.4613999999997, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/406653-300-300/p_59724_alta_1.jpg?v=638671279417700000', '801616')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/402778-300-300/p_59697_alta_1.jpg?v=638646973969800000" alt="Produto">
+            <div class="codigo">Cód.: 801605</div>
+            <div class="titulo">SSD Kingston NV3 M.2 2280 NVMe, Leitura: 6000MB/s e Gravação: 4000MB/s | 1TB</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 599,58 por</div>
+                <div class="preco-atual">R$ 467,18 <span class="pix">no pix</span></div>
+                <div class="desconto">-16% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('SSD Kingston NV3 M.2 2280 NVMe, Leitura: 6000MB/s e Gravação: 4000MB/s | 1TB', 467.18370000000004, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/402778-300-300/p_59697_alta_1.jpg?v=638646973969800000', '801605')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/389146-300-300/p_59460_alta_1.jpg?v=638598496760730000" alt="Produto">
+            <div class="codigo">Cód.: 801551</div>
+            <div class="titulo">SSD Externo SANDISK Portátil - SDSSDE30-2T00-G26 | 2TB</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 982,33 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('SSD Externo SANDISK Portátil - SDSSDE30-2T00-G26 | 2TB', 982.3291, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/389146-300-300/p_59460_alta_1.jpg?v=638598496760730000', '801551')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418956-300-300/a_801640_alta_1.jpg?v=638750789888700000" alt="Produto">
+            <div class="codigo">Cód.: 801640</div>
+            <div class="titulo">Gabinete Gamer, Gigabyte C102G, Lateral em Vidro temperado, USB 3.0 | Branco</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 485,70 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Gabinete Gamer, Gigabyte C102G, Lateral em Vidro temperado, USB 3.0 | Branco', 485.69669999999996, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/418956-300-300/a_801640_alta_1.jpg?v=638750789888700000', '801640')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/423158-300-300/a_801691_alta_1.jpg?v=638776302631200000" alt="Produto">
+            <div class="codigo">Cód.: 801691</div>
+            <div class="titulo">Gabinete Gamer Gigabyte C301 Glass, RGB, Mid-Tower, Lateral de Vidro, 4 Fans | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 690,07 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Gabinete Gamer Gigabyte C301 Glass, RGB, Mid-Tower, Lateral de Vidro, 4 Fans | Preto', 690.0656999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/423158-300-300/a_801691_alta_1.jpg?v=638776302631200000', '801691')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/414227-300-300/a_801579_alta_1.jpg?v=638719529058100000" alt="Produto">
+            <div class="codigo">Cód.: 801579</div>
+            <div class="titulo">Gabinete Hilevel, Sem Fonte, Com 4 Fan, ATX, ARGB de 12 cm - LV510 | Branco</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 386,02 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Gabinete Hilevel, Sem Fonte, Com 4 Fan, ATX, ARGB de 12 cm - LV510 | Branco', 386.01689999999996, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/414227-300-300/a_801579_alta_1.jpg?v=638719529058100000', '801579')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/403256-300-300/p_59723_alta_1.jpg?v=638648664593800000" alt="Produto">
+            <div class="codigo">Cód.: 801615</div>
+            <div class="titulo">Processador Intel Core i3-14100F, 3.5GHz até 4.7GHz Max Turbo, Cache 12MB, 4 Núcleos, 8 Threads, LGA 1700 - BX8071514100F</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 775,09 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Processador Intel Core i3-14100F, 3.5GHz até 4.7GHz Max Turbo, Cache 12MB, 4 Núcleos, 8 Threads, LGA 1700 - BX8071514100F', 775.0924, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/403256-300-300/p_59723_alta_1.jpg?v=638648664593800000', '801615')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/404528-300-300/p_59691_alta_1.jpg?v=638658893044030000" alt="Produto">
+            <div class="codigo">Cód.: 801583</div>
+            <div class="titulo">Fonte Hilevel 850W, 80 Plus Gold, Full Modular | Bivolt</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 681,31 por</div>
+                <div class="preco-atual">R$ 528,65 <span class="pix">no pix</span></div>
+                <div class="desconto">-17% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Fonte Hilevel 850W, 80 Plus Gold, Full Modular | Bivolt', 528.6517, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/404528-300-300/p_59691_alta_1.jpg?v=638658893044030000', '801583')">Adicionar ao Carrinho</button>        </div>
+
+    </div>
+
+    <script>
+        // ====== CARRINHO ======
+        let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+
+        function salvarCarrinho() {
+            localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        }
+
+        function atualizarContador() {
+            const count = carrinho.reduce((acc, item) => acc + item.qtd, 0);
+            document.getElementById('cart-count').textContent = count;
+        }
+
+        function animarCarrinho() {
+            const icon = document.getElementById('cart-icon');
+            icon.classList.add('bounce');
+            setTimeout(() => icon.classList.remove('bounce'), 400);
+        }
+
+      /*  function adicionarCarrinho(titulo, preco, imagem) {
+            const item = carrinho.find(p => p.titulo === titulo);
+            if (item) {
+                item.qtd += 1;
+            } else {
+                carrinho.push({ titulo, preco, imagem, qtd: 1 });
+            }
+            salvarCarrinho();
+            atualizarContador();
+            animarCarrinho();
+            atualizarDropdown();
+        }*/
+
+        function adicionarCarrinho(titulo, preco, imagem, codigo = '') {
+            const item = carrinho.find(p => (codigo ? p.codigo === codigo : p.titulo === titulo));
+            if (item) {
+                item.qtd += 1;
+            } else {
+                carrinho.push({ titulo, preco, imagem, codigo, qtd: 1 });
+            }
+            salvarCarrinho();
+            atualizarContador();
+            animarCarrinho();
+            atualizarDropdown();
+        }
+
+        function alterarQtd(index, valor) {
+            carrinho[index].qtd += valor;
+            if (carrinho[index].qtd <= 0) {
+                carrinho.splice(index, 1);
+            }
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+        function removerProduto(index) {
+            carrinho.splice(index, 1);
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+        function atualizarDropdown() {
+            const container = document.getElementById('cart-items');
+            container.innerHTML = '';
+            let total = 0;
+
+            carrinho.forEach((item, index) => {
+                total += item.preco * item.qtd;
+                container.innerHTML += `
+                    <div class="cart-item">
+                        <img src="${item.imagem}" alt="${item.titulo}">
+                        <div class="cart-item-info">
+                            <div class="codigo">${item.codigo ? item.codigo : ''}</div>
+                            <div>${item.titulo}</div>
+                            <div class="cart-controls">
+                                <button onclick="alterarQtd(${index}, -1)">-</button>
+                                <input type="number" min="0" value="${item.qtd}" onchange="alterarQtdInput(${index}, this.value)" style="width: 50px; text-align: center; font-size:16px;">
+                                <button onclick="alterarQtd(${index}, 1)">+</button>
+                                <button class="remove-btn" onclick="removerProduto(${index})">🗑️</button>
+                            </div>
+                            <div>${(item.preco * item.qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('cart-total').textContent =`Total: R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function alterarQtdInput(index, valor) {
+            valor = parseInt(valor);
+            if (isNaN(valor) || valor < 0) valor = 0;
+
+            if (valor === 0) {
+                carrinho.splice(index, 1); // remove se 0
+            } else {
+                carrinho[index].qtd = valor;
+            }
+
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+
+        function toggleCarrinho() {
+            const drop = document.getElementById('cart-dropdown');
+            const isOpen = getComputedStyle(drop).display !== 'none';
+            drop.style.display = isOpen ? 'none' : 'flex';
+        }
+
+        // ====== CONTROLE DE ABRIR/FECHAR ======
+        // Não fechar ao clicar dentro do menu
+        document.getElementById('cart-dropdown').addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+
+        // IMPORTANTE: como já existe onclick="toggleCarrinho()" no HTML,
+        // aqui só paramos a propagação para não disparar o listener do documento.
+        document.getElementById('cart-icon').addEventListener('click', function (e) {
+            e.stopPropagation();
+            // não chama toggleCarrinho() aqui para evitar duplo toggle
+        });
+
+        // Fecha apenas se clicar fora do ícone e do menu
+        document.addEventListener('click', function (event) {
+            const drop = document.getElementById('cart-dropdown');
+            const icon = document.getElementById('cart-icon');
+            if (!drop.contains(event.target) && !icon.contains(event.target)) {
+                drop.style.display = 'none';
+            }
+        });
+
+        
+      /*  function finalizarCompra() {
+            alert('Compra finalizada!');
+            carrinho = [];
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+            document.getElementById('cart-dropdown').style.display = 'none';
+        }*/
+
+function mostrarSucesso(mensagem) {
+    let aviso = document.createElement('div');
+    aviso.className = 'sucesso-tooltip';
+    aviso.textContent = mensagem;
+    document.body.appendChild(aviso);
+
+    // Exibir com animação
+    setTimeout(() => aviso.classList.add('show'), 10);
+
+    // Remover após 3,5s
+    setTimeout(() => {
+        aviso.classList.remove('show');
+        setTimeout(() => aviso.remove(), 400); // esperar terminar animação
+    }, 3500);
+}
+
+    function finalizarCompra() {
+        let total = carrinho.reduce((acc, item) => acc + item.preco * item.qtd, 0);
+        const botao = document.querySelector('.finalizar');
+
+        // Remove tooltip antiga se existir
+        let oldTooltip = document.querySelector('.finalizar-tooltip');
+        if (oldTooltip) oldTooltip.remove();
+
+        if (total < 500) {
+            // Criar tooltip para valor mínimo
+            let tooltip = document.createElement('div');
+            tooltip.classList.add('finalizar-tooltip');
+            tooltip.textContent = 'O valor mínimo para finalizar a compra é R$500,00';
+            botao.appendChild(tooltip);
+
+            setTimeout(() => tooltip.classList.add('show'), 10);
+            setTimeout(() => tooltip.classList.remove('show'), 3500);
+            setTimeout(() => tooltip.remove(), 3500);
+            return;
+        }
+
+        // Enviar pedido para o Flask
+        fetch('http://127.0.0.1:5000/finalizar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ total: total, itens: carrinho })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Mostrar sucesso usando sua função CSS
+            mostrarSucesso(`Pedido enviado com sucesso! ID: ${data.pedido_id}`);
+
+            // Limpar carrinho e atualizar
+            carrinho = [];
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+            document.getElementById('cart-dropdown').style.display = 'none';
+        })
+        .catch(err => {
+            let erroTooltip = document.createElement('div');
+            erroTooltip.classList.add('finalizar-tooltip');
+            erroTooltip.textContent = 'Erro ao enviar pedido. Tente novamente!';
+            botao.appendChild(erroTooltip);
+
+            setTimeout(() => erroTooltip.classList.add('show'), 10);
+            setTimeout(() => erroTooltip.classList.remove('show'), 3500);
+            setTimeout(() => erroTooltip.remove(), 3500);
+
+            console.error('Erro ao enviar pedido:', err);
+        });
+    }
+  
+        // Inicialização
+        atualizarContador();
+        atualizarDropdown();
+    </script>
+</body>
+</html>
