@@ -20,6 +20,32 @@
             margin: 0;    
         }
 
+        .titulo_nome {
+        font-family: 'Story_Script';
+        font-size: 35px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin: 0;
+        }
+
+        .titulo_nome a {
+        text-decoration: none;
+        background: linear-gradient(270deg, #050c4e, #012b30, #01162e, #021d1b, #020f33);
+        background-size: 600% 600%;
+        -webkit-background-clip:text;
+        -webkit-text-fill-color: transparent;
+        animation: gradientShift 12s ease infinite;
+        transition: text-shadow 0.5s;
+        display: inline-block;
+        }
+
+        @keyframes gradientShift {
+        0% { background-position: 0% 50%; }  
+        50% { background-position: 100% 50%; }  
+        100% { background-position: 0% 50%; }  
+        }        
+
+
         header {
             position: fixed;
             top: 0;
@@ -309,7 +335,7 @@
 </head>
 <body>
     <header>
-        <h1>🛒 Memória</h1>
+        <h1 class="titulo_nome"><a href="main.html">🛒 Memória</a></h1>
         <div class="cart-icon" onclick="toggleCarrinho()" id="cart-icon">
             <img src="https://cdn-icons-png.flaticon.com/512/1170/1170678.png" alt="Carrinho">
             <div class="cart-count" id="cart-count">0</div>
