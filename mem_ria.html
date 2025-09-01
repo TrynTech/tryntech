@@ -367,10 +367,10 @@
             <div class="titulo">Memória Kingston, 16GB, DDR5, 5600mhz, DIMM, KVR56U46BS8-16 | 16GB</div>
             <div class="precos">
                 <div class="preco-antigo">De R$ 553,94 por</div>
-                <div class="preco-atual">R$ 482,43 <span class="pix">no pix</span></div>
-                <div class="desconto">-6% OFF</div>
+                <div class="preco-atual">R$ 501,81 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
             </div>
-            <button class="add-btn" onclick="adicionarCarrinho('Memória Kingston, 16GB, DDR5, 5600mhz, DIMM, KVR56U46BS8-16 | 16GB', 482.42969999999997, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/433138-300-300/p_60449_alta_1.jpg?v=638836832228170000', '801716')">Adicionar ao Carrinho</button>        </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Memória Kingston, 16GB, DDR5, 5600mhz, DIMM, KVR56U46BS8-16 | 16GB', 501.81389999999993, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/433138-300-300/p_60449_alta_1.jpg?v=638836832228170000', '801716')">Adicionar ao Carrinho</button>        </div>
 
         <div class="produto">
             <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/425966-300-300/p_60240_alta_1.jpg?v=638792206136500000" alt="Produto">
@@ -378,21 +378,21 @@
             <div class="titulo">Memória RAM Kingston Fury, 2G x 64-Bit, 5200MHz, DDR5, CL40 - KF552C40BB-16 | 16GB</div>
             <div class="precos">
                 <div class="preco-antigo">De R$ 475,44 por</div>
-                <div class="preco-atual">R$ 381,26 <span class="pix">no pix</span></div>
-                <div class="desconto">-14% OFF</div>
+                <div class="preco-atual">R$ 390,55 <span class="pix">no pix</span></div>
+                <div class="desconto">-12% OFF</div>
             </div>
-            <button class="add-btn" onclick="adicionarCarrinho('Memória RAM Kingston Fury, 2G x 64-Bit, 5200MHz, DDR5, CL40 - KF552C40BB-16 | 16GB', 381.2616, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/425966-300-300/p_60240_alta_1.jpg?v=638792206136500000', '801702')">Adicionar ao Carrinho</button>        </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Memória RAM Kingston Fury, 2G x 64-Bit, 5200MHz, DDR5, CL40 - KF552C40BB-16 | 16GB', 390.5544, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/425966-300-300/p_60240_alta_1.jpg?v=638792206136500000', '801702')">Adicionar ao Carrinho</button>        </div>
 
         <div class="produto">
             <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/398878-300-300/p_59699_alta_1.jpg?v=638828425862430000" alt="Produto">
             <div class="codigo">Cód.: 801594</div>
             <div class="titulo">Memória HiLevel, DDR4 3200MHz, CL19 - LVL3200GMPC/8 | 8GB</div>
             <div class="precos">
-                <div class="preco-antigo">De R$ 159,18 por</div>
-                <div class="preco-atual">R$ 133,11 <span class="pix">no pix</span></div>
-                <div class="desconto">-11% OFF</div>
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 148,38 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
             </div>
-            <button class="add-btn" onclick="adicionarCarrinho('Memória HiLevel, DDR4 3200MHz, CL19 - LVL3200GMPC/8 | 8GB', 133.1148, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/398878-300-300/p_59699_alta_1.jpg?v=638828425862430000', '801594')">Adicionar ao Carrinho</button>        </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Memória HiLevel, DDR4 3200MHz, CL19 - LVL3200GMPC/8 | 8GB', 148.385, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/398878-300-300/p_59699_alta_1.jpg?v=638828425862430000', '801594')">Adicionar ao Carrinho</button>        </div>
 
     </div>
 
@@ -578,7 +578,8 @@ function mostrarSucesso(mensagem) {
         }
 
         // Enviar pedido para o Flask
-        fetch('http://127.0.0.1:5000/finalizar', {
+        //fetch('http://127.0.0.1:5000/finalizar', {
+        fetch('https://flask-88cy.onrender.com', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
