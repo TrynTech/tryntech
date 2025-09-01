@@ -1084,7 +1084,8 @@ function mostrarSucesso(mensagem) {
         }
 
         // Enviar pedido para o Flask
-        fetch('http://127.0.0.1:5000/finalizar', {
+        //fetch('http://127.0.0.1:5000/finalizar', {
+        fetch('https://flask-88cy.onrender.com', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
