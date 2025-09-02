@@ -203,24 +203,34 @@
 
         .sucesso-tooltip {
             position: fixed;
-            background: #0aa030;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 16px;
-            top: 18%; 
-            left: 50%; 
+            top: 20%;
+            left: 50%;
             transform: translate(-50%, -50%);
+            background: #4caf50;
+            color: #fff;
+            padding: 16px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 9999;
             opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease, transform 0.4s ease;
-            z-index: 4000;
-            white-space: nowrap;
+            transition: opacity 0.4s ease;
         }
-
         .sucesso-tooltip.show {
             opacity: 1;
-            transform: translate(-50%, -20%);
+        }
+        .sucesso-tooltip .copy-btn {
+            margin-top: 10px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #fff;
+            color: #333;
+            font-weight: bold;
+        }
+        .sucesso-tooltip .copy-btn:hover {
+            background: #e0e0e0;
         }
 
                         /* Remove setas do input number */
@@ -355,77 +365,77 @@
             <div class="codigo">Cód.: 15021</div>
             <div class="titulo">Cadeira Gamer Level LV-C01DN | Preto</div>
             <div class="precos">
-                <div class="preco-antigo">De R$ 710,67 por</div>
-                <div class="preco-atual">R$ 576,91 <span class="pix">no pix</span></div>
-                <div class="desconto">-13% OFF</div>
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 662,33 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
             </div>
-            <button class="add-btn" onclick="adicionarCarrinho('Cadeira Gamer Level LV-C01DN | Preto', 576.9064999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/428696-300-300/a_15021_alta_1.png?v=638812026230270000', '15021')">Adicionar ao Carrinho</button>        </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Cadeira Gamer Level LV-C01DN | Preto', 662.3298, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/428696-300-300/a_15021_alta_1.png?v=638812026230270000', '15021')">Adicionar ao Carrinho</button>        </div>
 
         <div class="produto">
             <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/407185-300-300/p_59826_alta_1.jpg?v=638676368190700000" alt="Produto">
             <div class="codigo">Cód.: 15071</div>
             <div class="titulo">Cadeira Office Giratória ELG Preta, Wish Comfort, com ajuste, OCH01</div>
             <div class="precos">
-                <div class="preco-antigo">De R$ 325,49 por</div>
-                <div class="preco-atual">R$ 235,98 <span class="pix">no pix</span></div>
+                <div class="preco-antigo">De R$ 326,54 por</div>
+                <div class="preco-atual">R$ 237,03 <span class="pix">no pix</span></div>
                 <div class="desconto">-23% OFF</div>
             </div>
-            <button class="add-btn" onclick="adicionarCarrinho('Cadeira Office Giratória ELG Preta, Wish Comfort, com ajuste, OCH01', 235.97689999999997, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/407185-300-300/p_59826_alta_1.jpg?v=638676368190700000', '15071')">Adicionar ao Carrinho</button>        </div>
-
-        <div class="produto">
-            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/428656-300-300/a_15022_alta_1.png?v=638812025902100000" alt="Produto">
-            <div class="codigo">Cód.: 15022</div>
-            <div class="titulo">Cadeira Gamer Level LV-C01DN | Preto/Verde</div>
-            <div class="precos">
-                <div class="preco-antigo">De R$ 709,39 por</div>
-                <div class="preco-atual">R$ 575,62 <span class="pix">no pix</span></div>
-                <div class="desconto">-13% OFF</div>
-            </div>
-            <button class="add-btn" onclick="adicionarCarrinho('Cadeira Gamer Level LV-C01DN | Preto/Verde', 575.6238999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/428656-300-300/a_15022_alta_1.png?v=638812025902100000', '15022')">Adicionar ao Carrinho</button>        </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Cadeira Office Giratória ELG Preta, Wish Comfort, com ajuste, OCH01', 237.02689999999998, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/407185-300-300/p_59826_alta_1.jpg?v=638676368190700000', '15071')">Adicionar ao Carrinho</button>        </div>
 
         <div class="produto">
             <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/407288-300-300/p_59872_alta_1.jpg?v=638677911174100000" alt="Produto">
             <div class="codigo">Cód.: 15073</div>
             <div class="titulo">Cadeira Gamer Acer Predator 3ª Geração, GP.GCR11.00Y | Preto/Azul</div>
             <div class="precos">
-                <div class="preco-antigo">De R$ 1.568,32 por</div>
-                <div class="preco-atual">R$ 971,79 <span class="pix">no pix</span></div>
+                <div class="preco-antigo">De R$ 1.569,37 por</div>
+                <div class="preco-atual">R$ 972,84 <span class="pix">no pix</span></div>
                 <div class="desconto">-34% OFF</div>
             </div>
-            <button class="add-btn" onclick="adicionarCarrinho('Cadeira Gamer Acer Predator 3ª Geração, GP.GCR11.00Y | Preto/Azul', 971.79, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/407288-300-300/p_59872_alta_1.jpg?v=638677911174100000', '15073')">Adicionar ao Carrinho</button>        </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Cadeira Gamer Acer Predator 3ª Geração, GP.GCR11.00Y | Preto/Azul', 972.8399999999999, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/407288-300-300/p_59872_alta_1.jpg?v=638677911174100000', '15073')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/428656-300-300/a_15022_alta_1.png?v=638812025902100000" alt="Produto">
+            <div class="codigo">Cód.: 15022</div>
+            <div class="titulo">Cadeira Gamer Level LV-C01DN | Preto/Verde</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 661,13 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Cadeira Gamer Level LV-C01DN | Preto/Verde', 661.1319, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/428656-300-300/a_15022_alta_1.png?v=638812025902100000', '15022')">Adicionar ao Carrinho</button>        </div>
 
         <div class="produto">
             <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/428918-300-300/a_15024_alta_1.png?v=638812054035400000" alt="Produto">
             <div class="codigo">Cód.: 15024</div>
             <div class="titulo">Cadeira Gamer Level LV-C03BI | Preto</div>
             <div class="precos">
-                <div class="preco-antigo">De R$ 1.362,62 por</div>
-                <div class="preco-atual">R$ 1.099,88 <span class="pix">no pix</span></div>
-                <div class="desconto">-13% OFF</div>
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 1.269,12 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
             </div>
-            <button class="add-btn" onclick="adicionarCarrinho('Cadeira Gamer Level LV-C03BI | Preto', 1099.8806, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/428918-300-300/a_15024_alta_1.png?v=638812054035400000', '15024')">Adicionar ao Carrinho</button>        </div>
-
-        <div class="produto">
-            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/429156-300-300/a_15028_alta_1.png?v=638812059928400000" alt="Produto">
-            <div class="codigo">Cód.: 15028</div>
-            <div class="titulo">Cadeira Gamer Level com Iluminação RGB LV-C06BN-RGB | Preto</div>
-            <div class="precos">
-                <div class="preco-antigo">De R$ 1.487,25 por</div>
-                <div class="preco-atual">R$ 1.197,47 <span class="pix">no pix</span></div>
-                <div class="desconto">-14% OFF</div>
-            </div>
-            <button class="add-btn" onclick="adicionarCarrinho('Cadeira Gamer Level com Iluminação RGB LV-C06BN-RGB | Preto', 1197.4670999999998, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/429156-300-300/a_15028_alta_1.png?v=638812059928400000', '15028')">Adicionar ao Carrinho</button>        </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Cadeira Gamer Level LV-C03BI | Preto', 1269.1205999999997, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/428918-300-300/a_15024_alta_1.png?v=638812054035400000', '15024')">Adicionar ao Carrinho</button>        </div>
 
         <div class="produto">
             <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/428974-300-300/a_15025_alta_1.png?v=638812054491930000" alt="Produto">
             <div class="codigo">Cód.: 15025</div>
             <div class="titulo">Cadeira Gamer Level LV-C03BI | Preto/Vermelho</div>
             <div class="precos">
-                <div class="preco-antigo">De R$ 1.356,57 por</div>
-                <div class="preco-atual">R$ 1.093,83 <span class="pix">no pix</span></div>
-                <div class="desconto">-13% OFF</div>
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 1.263,01 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
             </div>
-            <button class="add-btn" onclick="adicionarCarrinho('Cadeira Gamer Level LV-C03BI | Preto/Vermelho', 1093.8306, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/428974-300-300/a_15025_alta_1.png?v=638812054491930000', '15025')">Adicionar ao Carrinho</button>        </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Cadeira Gamer Level LV-C03BI | Preto/Vermelho', 1263.0101, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/428974-300-300/a_15025_alta_1.png?v=638812054491930000', '15025')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/429156-300-300/a_15028_alta_1.png?v=638812059928400000" alt="Produto">
+            <div class="codigo">Cód.: 15028</div>
+            <div class="titulo">Cadeira Gamer Level com Iluminação RGB LV-C06BN-RGB | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 1.385,14 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Cadeira Gamer Level com Iluminação RGB LV-C06BN-RGB | Preto', 1385.1354, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/429156-300-300/a_15028_alta_1.png?v=638812059928400000', '15028')">Adicionar ao Carrinho</button>        </div>
 
     </div>
 
@@ -576,17 +586,31 @@
 function mostrarSucesso(mensagem) {
     let aviso = document.createElement('div');
     aviso.className = 'sucesso-tooltip';
-    aviso.textContent = mensagem;
+
+    // Cria conteúdo com botão
+    aviso.innerHTML = `
+        <span>${mensagem}</span><br>
+        <button class="copy-btn">📋 Copiar código</button>
+    `;
+
     document.body.appendChild(aviso);
+
+    // Evento de copiar
+    aviso.querySelector(".copy-btn").addEventListener("click", () => {
+        navigator.clipboard.writeText(mensagem).then(() => {
+            aviso.querySelector(".copy-btn").textContent = "✅ Copiado!";
+            setTimeout(() => aviso.querySelector(".copy-btn").textContent = "📋 Copiar código", 2000);
+        });
+    });
 
     // Exibir com animação
     setTimeout(() => aviso.classList.add('show'), 10);
 
-    // Remover após 3,5s
+    // Remover após 10s
     setTimeout(() => {
         aviso.classList.remove('show');
         setTimeout(() => aviso.remove(), 400); // esperar terminar animação
-    }, 3500);
+    }, 12000);
 }
 
     function finalizarCompra() {
@@ -611,7 +635,8 @@ function mostrarSucesso(mensagem) {
         }
 
         // Enviar pedido para o Flask
-        fetch('http://127.0.0.1:5000/finalizar', {
+        //fetch('http://127.0.0.1:5000/finalizar', {
+        fetch('https://flask-88cy.onrender.com/finalizar', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
