@@ -203,24 +203,34 @@
 
         .sucesso-tooltip {
             position: fixed;
-            background: #0aa030;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 16px;
-            top: 18%; 
-            left: 50%; 
+            top: 20%;
+            left: 50%;
             transform: translate(-50%, -50%);
+            background: #4caf50;
+            color: #fff;
+            padding: 16px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 9999;
             opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease, transform 0.4s ease;
-            z-index: 4000;
-            white-space: nowrap;
+            transition: opacity 0.4s ease;
         }
-
         .sucesso-tooltip.show {
             opacity: 1;
-            transform: translate(-50%, -20%);
+        }
+        .sucesso-tooltip .copy-btn {
+            margin-top: 10px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #fff;
+            color: #333;
+            font-weight: bold;
+        }
+        .sucesso-tooltip .copy-btn:hover {
+            background: #e0e0e0;
         }
 
                         /* Remove setas do input number */
@@ -356,32 +366,32 @@
             <div class="titulo">Memória Alltek, 1600Mhz, DDR3, CL11 - ATK1600DDR3/8 | 8GB</div>
             <div class="precos">
                 <div class="preco-antigo"></div>
-                <div class="preco-atual">R$ 64,58 <span class="pix">no pix</span></div>
+                <div class="preco-atual">R$ 68,66 <span class="pix">no pix</span></div>
                 <div class="desconto"></div>
             </div>
-            <button class="add-btn" onclick="adicionarCarrinho('Memória Alltek, 1600Mhz, DDR3, CL11 - ATK1600DDR3/8 | 8GB', 64.5804, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/312088-300-300/p_57772_alta_1.png?v=638228010194100000', '801317')">Adicionar ao Carrinho</button>        </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Memória Alltek, 1600Mhz, DDR3, CL11 - ATK1600DDR3/8 | 8GB', 68.65822784810126, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/312088-300-300/p_57772_alta_1.png?v=638228010194100000', '801317')">Adicionar ao Carrinho</button>        </div>
 
         <div class="produto">
             <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/433138-300-300/p_60449_alta_1.jpg?v=638836832228170000" alt="Produto">
             <div class="codigo">Cód.: 801716</div>
             <div class="titulo">Memória Kingston, 16GB, DDR5, 5600mhz, DIMM, KVR56U46BS8-16 | 16GB</div>
             <div class="precos">
-                <div class="preco-antigo">De R$ 553,94 por</div>
-                <div class="preco-atual">R$ 501,81 <span class="pix">no pix</span></div>
+                <div class="preco-antigo">De R$ 580,59 por</div>
+                <div class="preco-atual">R$ 526,06 <span class="pix">no pix</span></div>
                 <div class="desconto">-3% OFF</div>
             </div>
-            <button class="add-btn" onclick="adicionarCarrinho('Memória Kingston, 16GB, DDR5, 5600mhz, DIMM, KVR56U46BS8-16 | 16GB', 501.81389999999993, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/433138-300-300/p_60449_alta_1.jpg?v=638836832228170000', '801716')">Adicionar ao Carrinho</button>        </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Memória Kingston, 16GB, DDR5, 5600mhz, DIMM, KVR56U46BS8-16 | 16GB', 526.0632911392405, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/433138-300-300/p_60449_alta_1.jpg?v=638836832228170000', '801716')">Adicionar ao Carrinho</button>        </div>
 
         <div class="produto">
             <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/425966-300-300/p_60240_alta_1.jpg?v=638792206136500000" alt="Produto">
             <div class="codigo">Cód.: 801702</div>
             <div class="titulo">Memória RAM Kingston Fury, 2G x 64-Bit, 5200MHz, DDR5, CL40 - KF552C40BB-16 | 16GB</div>
             <div class="precos">
-                <div class="preco-antigo">De R$ 475,44 por</div>
-                <div class="preco-atual">R$ 390,55 <span class="pix">no pix</span></div>
+                <div class="preco-antigo">De R$ 498,47 por</div>
+                <div class="preco-atual">R$ 409,67 <span class="pix">no pix</span></div>
                 <div class="desconto">-12% OFF</div>
             </div>
-            <button class="add-btn" onclick="adicionarCarrinho('Memória RAM Kingston Fury, 2G x 64-Bit, 5200MHz, DDR5, CL40 - KF552C40BB-16 | 16GB', 390.5544, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/425966-300-300/p_60240_alta_1.jpg?v=638792206136500000', '801702')">Adicionar ao Carrinho</button>        </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Memória RAM Kingston Fury, 2G x 64-Bit, 5200MHz, DDR5, CL40 - KF552C40BB-16 | 16GB', 409.67088607594934, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/425966-300-300/p_60240_alta_1.jpg?v=638792206136500000', '801702')">Adicionar ao Carrinho</button>        </div>
 
         <div class="produto">
             <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/398878-300-300/p_59699_alta_1.jpg?v=638828425862430000" alt="Produto">
@@ -389,10 +399,10 @@
             <div class="titulo">Memória HiLevel, DDR4 3200MHz, CL19 - LVL3200GMPC/8 | 8GB</div>
             <div class="precos">
                 <div class="preco-antigo"></div>
-                <div class="preco-atual">R$ 148,38 <span class="pix">no pix</span></div>
+                <div class="preco-atual">R$ 156,33 <span class="pix">no pix</span></div>
                 <div class="desconto"></div>
             </div>
-            <button class="add-btn" onclick="adicionarCarrinho('Memória HiLevel, DDR4 3200MHz, CL19 - LVL3200GMPC/8 | 8GB', 148.385, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/398878-300-300/p_59699_alta_1.jpg?v=638828425862430000', '801594')">Adicionar ao Carrinho</button>        </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Memória HiLevel, DDR4 3200MHz, CL19 - LVL3200GMPC/8 | 8GB', 156.32911392405063, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/398878-300-300/p_59699_alta_1.jpg?v=638828425862430000', '801594')">Adicionar ao Carrinho</button>        </div>
 
     </div>
 
@@ -543,17 +553,31 @@
 function mostrarSucesso(mensagem) {
     let aviso = document.createElement('div');
     aviso.className = 'sucesso-tooltip';
-    aviso.textContent = mensagem;
+
+    // Cria conteúdo com botão
+    aviso.innerHTML = `
+        <span>${mensagem}</span><br>
+        <button class="copy-btn">📋 Copiar código</button>
+    `;
+
     document.body.appendChild(aviso);
+
+    // Evento de copiar
+    aviso.querySelector(".copy-btn").addEventListener("click", () => {
+        navigator.clipboard.writeText(mensagem).then(() => {
+            aviso.querySelector(".copy-btn").textContent = "✅ Copiado!";
+            setTimeout(() => aviso.querySelector(".copy-btn").textContent = "📋 Copiar código", 2000);
+        });
+    });
 
     // Exibir com animação
     setTimeout(() => aviso.classList.add('show'), 10);
 
-    // Remover após 3,5s
+    // Remover após 10s
     setTimeout(() => {
         aviso.classList.remove('show');
         setTimeout(() => aviso.remove(), 400); // esperar terminar animação
-    }, 3500);
+    }, 12000);
 }
 
     function finalizarCompra() {
@@ -579,7 +603,7 @@ function mostrarSucesso(mensagem) {
 
         // Enviar pedido para o Flask
         //fetch('http://127.0.0.1:5000/finalizar', {
-        fetch('https://flask-88cy.onrender.com', {
+        fetch('https://flask-88cy.onrender.com/finalizar', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
