@@ -203,24 +203,34 @@
 
         .sucesso-tooltip {
             position: fixed;
-            background: #0aa030;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 16px;
-            top: 18%; 
-            left: 50%; 
+            top: 20%;
+            left: 50%;
             transform: translate(-50%, -50%);
+            background: #4caf50;
+            color: #fff;
+            padding: 16px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 9999;
             opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease, transform 0.4s ease;
-            z-index: 4000;
-            white-space: nowrap;
+            transition: opacity 0.4s ease;
         }
-
         .sucesso-tooltip.show {
             opacity: 1;
-            transform: translate(-50%, -20%);
+        }
+        .sucesso-tooltip .copy-btn {
+            margin-top: 10px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #fff;
+            color: #333;
+            font-weight: bold;
+        }
+        .sucesso-tooltip .copy-btn:hover {
+            background: #e0e0e0;
         }
 
                         /* Remove setas do input number */
@@ -355,11 +365,11 @@
             <div class="codigo">Cód.: 801458</div>
             <div class="titulo">Placa Mãe Gigabyte B550M Aorus Elite, AMD AM4, Micro ATX | DDR4</div>
             <div class="precos">
-                <div class="preco-antigo">De R$ 1.087,01 por</div>
-                <div class="preco-atual">R$ 951,51 <span class="pix">no pix</span></div>
-                <div class="desconto">-6% OFF</div>
+                <div class="preco-antigo">De R$ 1.138,25 por</div>
+                <div class="preco-atual">R$ 1.018,53 <span class="pix">no pix</span></div>
+                <div class="desconto">-4% OFF</div>
             </div>
-            <button class="add-btn" onclick="adicionarCarrinho('Placa Mãe Gigabyte B550M Aorus Elite, AMD AM4, Micro ATX | DDR4', 951.5104, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/376546-300-300/p_59123_alta_1.jpg?v=638531049490100000', '801458')">Adicionar ao Carrinho</button>        </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Placa Mãe Gigabyte B550M Aorus Elite, AMD AM4, Micro ATX | DDR4', 1018.5316455696202, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/376546-300-300/p_59123_alta_1.jpg?v=638531049490100000', '801458')">Adicionar ao Carrinho</button>        </div>
 
         <div class="produto">
             <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/392938-300-300/p_59545_alta_1.jpg?v=638614190761100000" alt="Produto">
@@ -367,10 +377,10 @@
             <div class="titulo">Processador AMD Ryzen 5 5500, 3.6 GHz, (4.2GHz Max Turbo), Cachê 3MB, 6 Núcleos, 12 Threads, Sem Video, AM4 - 100-100000457BOX</div>
             <div class="precos">
                 <div class="preco-antigo"></div>
-                <div class="preco-atual">R$ 678,96 <span class="pix">no pix</span></div>
+                <div class="preco-atual">R$ 711,38 <span class="pix">no pix</span></div>
                 <div class="desconto">Sem desconto</div>
             </div>
-            <button class="add-btn" onclick="adicionarCarrinho('Processador AMD Ryzen 5 5500, 3.6 GHz, (4.2GHz Max Turbo), Cachê 3MB, 6 Núcleos, 12 Threads, Sem Video, AM4 - 100-100000457BOX', 678.9579, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/392938-300-300/p_59545_alta_1.jpg?v=638614190761100000', '801556')">Adicionar ao Carrinho</button>        </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Processador AMD Ryzen 5 5500, 3.6 GHz, (4.2GHz Max Turbo), Cachê 3MB, 6 Núcleos, 12 Threads, Sem Video, AM4 - 100-100000457BOX', 711.379746835443, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/392938-300-300/p_59545_alta_1.jpg?v=638614190761100000', '801556')">Adicionar ao Carrinho</button>        </div>
 
     </div>
 
@@ -521,17 +531,31 @@
 function mostrarSucesso(mensagem) {
     let aviso = document.createElement('div');
     aviso.className = 'sucesso-tooltip';
-    aviso.textContent = mensagem;
+
+    // Cria conteúdo com botão
+    aviso.innerHTML = `
+        <span>${mensagem}</span><br>
+        <button class="copy-btn">📋 Copiar código</button>
+    `;
+
     document.body.appendChild(aviso);
+
+    // Evento de copiar
+    aviso.querySelector(".copy-btn").addEventListener("click", () => {
+        navigator.clipboard.writeText(mensagem).then(() => {
+            aviso.querySelector(".copy-btn").textContent = "✅ Copiado!";
+            setTimeout(() => aviso.querySelector(".copy-btn").textContent = "📋 Copiar código", 2000);
+        });
+    });
 
     // Exibir com animação
     setTimeout(() => aviso.classList.add('show'), 10);
 
-    // Remover após 3,5s
+    // Remover após 10s
     setTimeout(() => {
         aviso.classList.remove('show');
         setTimeout(() => aviso.remove(), 400); // esperar terminar animação
-    }, 3500);
+    }, 12000);
 }
 
     function finalizarCompra() {
@@ -556,7 +580,8 @@ function mostrarSucesso(mensagem) {
         }
 
         // Enviar pedido para o Flask
-        fetch('http://127.0.0.1:5000/finalizar', {
+        //fetch('http://127.0.0.1:5000/finalizar', {
+        fetch('https://flask-88cy.onrender.com/finalizar', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
