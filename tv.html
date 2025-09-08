@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Tv</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f4f6f8;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        h1 {
+            color: #000;
+            text-transform: uppercase;
+            margin: 0;    
+        }
+
+        .titulo_nome {
+        font-family: 'Story_Script';
+        font-size: 35px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin: 0;
+        }
+
+        .titulo_nome a {
+        text-decoration: none;
+        background: linear-gradient(270deg, #050c4e, #012b30, #01162e, #021d1b, #020f33);
+        background-size: 600% 600%;
+        -webkit-background-clip:text;
+        -webkit-text-fill-color: transparent;
+        animation: gradientShift 12s ease infinite;
+        transition: text-shadow 0.5s;
+        display: inline-block;
+        }
+
+        @keyframes gradientShift {
+        0% { background-position: 0% 50%; }  
+        50% { background-position: 100% 50%; }  
+        100% { background-position: 0% 50%; }  
+        }        
+
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0; /* garante que ocupe até o fim */
+            width: 100%;
+            background: #fff;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            z-index: 1000;
+            flex-wrap: wrap;
+            gap: 10px;
+            box-sizing: border-box; /* impede que padding estoure a largura */
+        }
+
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 24px;
+            margin-right: 10px;
+            margin-top: 8px;
+        }
+
+        .cart-icon img {
+            width: 34px;
+            transition: transform 0.2s ease;
+        }
+
+        .cart-icon.bounce img {
+            transform: scale(1.3);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            background: red;
+            color: white;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* Dropdown do carrinho */
+        .cart-dropdown {
+            display: none;                 /* começa oculto */
+            position: fixed;
+            top: 60px;                     /* logo abaixo do header */
+            right: 0;
+            width: 400px;
+            height: calc(100vh - 60px);    /* altura total visível */
+            background: white;
+            border-radius: 8px 0 0 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            padding: 10px;
+            z-index: 2000;
+            /* quando abrir via JS, usaremos display:flex */
+            flex-direction: column;
+        }
+
+        #cart-items {
+            overflow-y: auto;      /* rolagem só aqui */
+            flex: 1;               /* ocupa o espaço disponível */
+            display: block;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .cart-item img {
+            width: 90px;
+            height: 90%;
+            object-fit: contain;
+        }
+        .cart-item-info {
+            flex: 1;
+            font-size: 13px;
+        }
+        .cart-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .cart-controls button {
+            border: none;
+            background: #ddd;
+            padding: 4px 8px; 
+            cursor: pointer;
+            font-size: 15px; /*aumenta o tamanho do + - e da lixeira*/
+            border-radius: 4px;
+        }
+        .remove-btn {
+            background: red;
+            color: white;
+        }
+        .cart-total {
+           font-weight: bold;
+            margin-top: 10px;
+            text-align: right;
+
+            position: sticky;   /* fixa dentro do scroller */
+            bottom: 52px;       /* espaço para o botão (ajusto dinamicamente no JS também) */
+            background: white;
+            padding: 8px 0;
+            z-index: 1;
+        }
+        .cart-dropdown button.finalizar {
+            flex-shrink: 0;
+            width: 100%;
+            padding: 12px;      /* um pouco mais alto */
+            background: #0aa030;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+            font-weight: bold;
+
+            position: sticky;   /* fica colado no fundo do scroller */
+            bottom: 12px;
+            z-index: 2;
+        }
+
+                        /* Tooltip de aviso do botão finalizar */
+        .finalizar-tooltip {
+            position: absolute;
+            background: #ff4d4f;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            top: -58px;       /* acima do botão */
+            left: 0;
+            opacity: 0;
+            transform: translateY(0);
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            white-space: nowrap;
+            z-index: 3000;
+        }
+        .finalizar-tooltip.show {
+            opacity: 1;
+            transform: translateY(-10px);
+        }
+
+        .sucesso-tooltip {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #4caf50;
+            color: #fff;
+            padding: 16px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .sucesso-tooltip.show {
+            opacity: 1;
+        }
+        .sucesso-tooltip .copy-btn {
+            margin-top: 10px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #fff;
+            color: #333;
+            font-weight: bold;
+        }
+        .sucesso-tooltip .copy-btn:hover {
+            background: #e0e0e0;
+        }
+
+                        /* Remove setas do input number */
+        .cart-controls input[type="number"]::-webkit-outer-spin-button,
+        .cart-controls input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .cart-controls input[type="number"] {
+            font-size: 16px;
+            width: 50px;
+            text-align: center;
+            border-radius: 6px;
+            border: 1px solid #bbb;
+            padding: 4px 6px;
+            background-color: #f9f9f9;
+            font-family: 'Arial', sans-serif; /* você pode trocar para outra fonte bonita */
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+
+        .cart-controls input[type="number"]:focus {
+            outline: none;
+            border-color: #0a9b43;
+            box-shadow: 0 0 4px #0a9b43;
+        }
+
+        .produto {
+            background: #fff;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            width: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s;
+        }
+
+        .produto:hover {
+            transform: translateY(-5px);
+        }
+
+        .produto img {
+            width: 100%;
+            border-bottom: 1px solid rgb(114, 107, 107);
+            object-fit: contain;
+            background: #f0f0f0;
+        }
+
+        .codigo {
+            font-size: 13px;
+            color: #555;
+            margin-top: 8px;
+        }
+
+        .titulo {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 7px 0 12px 0;
+            color: #202020;
+            height: auto;
+        }
+
+        .precos {
+            text-align: right;
+            margin-top: auto;
+        }
+
+        .preco-atual {
+            color: #0a9b43;
+            font-weight: bold;
+            font-size: 21px;
+        }
+
+        .preco-antigo {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .desconto {
+            color: #1bbf00;
+            background-color: #e6ffe6;
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .pix {
+            font-size: 13px;
+            color: #777;
+        }
+
+        .add-btn {
+            margin-top: 10px;
+            padding: 8px;
+            background: #0a9b43;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .add-btn:hover {
+            background: #0d7e39;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 class="titulo_nome"><a href="index.html">🛒 Tv</a></h1>
+        <div class="cart-icon" onclick="toggleCarrinho()" id="cart-icon">
+            <img src="https://cdn-icons-png.flaticon.com/512/1170/1170678.png" alt="Carrinho">
+            <div class="cart-count" id="cart-count">0</div>
+
+            <div class="cart-dropdown" id="cart-dropdown">
+                <div id="cart-items"></div>
+                <div class="cart-total" id="cart-total">Total: R$ 0,00</div>
+                <button class="finalizar" onclick="finalizarCompra()">Finalizar</button>
+            </div>
+        </div>
+    </header>
+
+    <div style="margin-top:80px; display:flex; flex-wrap:wrap; justify-content:center; width:100%;">
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/441715-300-300/p_60574_alta_1.jpg?v=638882707694530000" alt="Produto">
+            <div class="codigo">Cód.: 67645</div>
+            <div class="titulo">Smart TV LED 4K 50 AOC-PHILIPS 50U7045/78 Roku TV</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.339,24 por</div>
+                <div class="preco-atual">R$ 2.031,43 <span class="pix">no pix</span></div>
+                <div class="desconto">-7% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV LED 4K 50 AOC-PHILIPS 50U7045/78 Roku TV', 2031.4303797468353, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/441715-300-300/p_60574_alta_1.jpg?v=638882707694530000', '67645')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/417360-300-300/p_59462_alta_1.jpg?v=638828456135430000" alt="Produto">
+            <div class="codigo">Cód.: 67601</div>
+            <div class="titulo">Smart TV AOC 40" Full HD Roku 40S5045/78G | Preta</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.605,06 por</div>
+                <div class="preco-atual">R$ 1.398,13 <span class="pix">no pix</span></div>
+                <div class="desconto">-6% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV AOC 40\' Full HD Roku 40S5045/78G | Preta', 1398.126582278481, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/417360-300-300/p_59462_alta_1.jpg?v=638828456135430000', '67601')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/415593-300-300/p_59866_alta_1.jpg?v=638828461378230000" alt="Produto">
+            <div class="codigo">Cód.: 67620</div>
+            <div class="titulo">Smart TV LED 4K UHD 50" SEMP, Google Assistente, sem bordas</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.948,10 por</div>
+                <div class="preco-atual">R$ 1.968,33 <span class="pix">no pix</span></div>
+                <div class="desconto">-28% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV LED 4K UHD 50\' SEMP, Google Assistente, sem bordas', 1968.3291139240505, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/415593-300-300/p_59866_alta_1.jpg?v=638828461378230000', '67620')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/317494-300-300/p_57599_alta_12.png?v=638829107014230000" alt="Produto">
+            <div class="codigo">Cód.: 67504</div>
+            <div class="titulo">Smart TV Aiwa 32", Android, HD, Borda Ultrafina, AWS-TV-32-BL-02-A | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.294,94 por</div>
+                <div class="preco-atual">R$ 1.043,72 <span class="pix">no pix</span></div>
+                <div class="desconto">-13% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV Aiwa 32\', Android, HD, Borda Ultrafina, AWS-TV-32-BL-02-A | Preto', 1043.7215189873416, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/317494-300-300/p_57599_alta_12.png?v=638829107014230000', '67504')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/444490-300-300/p_60694_alta_1.jpg?v=638900787211170000" alt="Produto">
+            <div class="codigo">Cód.: 67883</div>
+            <div class="titulo">Smart TV LG 55" LED 4K UHD 55UA8550PSA, a7 AI Processor 4K Gen8</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 3.516,37 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV LG 55\' LED 4K UHD 55UA8550PSA, a7 AI Processor 4K Gen8', 3516.3670886075947, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/444490-300-300/p_60694_alta_1.jpg?v=638900787211170000', '67883')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/372201-300-300/p_57600_alta_13.png?v=638829108534830000" alt="Produto">
+            <div class="codigo">Cód.: 67505</div>
+            <div class="titulo">Smart TV Aiwa 43", Android, Full HD, Borda Ultrafina, Dolby Áudio, AWS-TV-43-BL-02-A | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.011,39 por</div>
+                <div class="preco-atual">R$ 1.675,94 <span class="pix">no pix</span></div>
+                <div class="desconto">-11% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV Aiwa 43\', Android, Full HD, Borda Ultrafina, Dolby Áudio, AWS-TV-43-BL-02-A | Preto', 1675.9367088607594, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/372201-300-300/p_57600_alta_13.png?v=638829108534830000', '67505')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/416675-300-300/p_59836_alta_1.jpg?v=638828461536370000" alt="Produto">
+            <div class="codigo">Cód.: 67621</div>
+            <div class="titulo">Smart TV LED 4K UHD 55" SEMP, Google Assistente, Dolby Audio, sem bordas</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.831,65 por</div>
+                <div class="preco-atual">R$ 2.429,01 <span class="pix">no pix</span></div>
+                <div class="desconto">-8% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV LED 4K UHD 55\' SEMP, Google Assistente, Dolby Audio, sem bordas', 2429.012658227848, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/416675-300-300/p_59836_alta_1.jpg?v=638828461536370000', '67621')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/375903-300-300/p_59150_alta_1.jpg?v=638829104011770000" alt="Produto">
+            <div class="codigo">Cód.: 67590</div>
+            <div class="titulo">Smart TV 32" LG HD 32LR600B | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.540,51 por</div>
+                <div class="preco-atual">R$ 1.129,15 <span class="pix">no pix</span></div>
+                <div class="desconto">-21% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV 32\' LG HD 32LR600B | Preto', 1129.1518987341772, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/375903-300-300/p_59150_alta_1.jpg?v=638829104011770000', '67590')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/439594-300-300/p_60693_alta_1.jpg?v=638871715839670000" alt="Produto">
+            <div class="codigo">Cód.: 67882</div>
+            <div class="titulo">Smart TV LG 43" LED 4K UHD 43UA8550PSA, a7 AI Processor 4K Gen8</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 2.391,29 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV LG 43\' LED 4K UHD 43UA8550PSA, a7 AI Processor 4K Gen8', 2391.2911392405063, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/439594-300-300/p_60693_alta_1.jpg?v=638871715839670000', '67882')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435136-300-300/p_60570_alta_1.jpg?v=638846350238670000" alt="Produto">
+            <div class="codigo">Cód.: 67644</div>
+            <div class="titulo">Smart TV LED 4K 65" Philips 65PUG7019 Google TV</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 3.943,04 por</div>
+                <div class="preco-atual">R$ 3.318,41 <span class="pix">no pix</span></div>
+                <div class="desconto">-10% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV LED 4K 65\' Philips 65PUG7019 Google TV', 3318.405063291139, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435136-300-300/p_60570_alta_1.jpg?v=638846350238670000', '67644')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/439576-300-300/p_60695_alta_1.jpg?v=638871715714470000" alt="Produto">
+            <div class="codigo">Cód.: 67884</div>
+            <div class="titulo">Smart TV LG 65" LED UHD 4K 65UA8550PSA, a7 AI Processor 4K Gen8</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 4.756,96 por</div>
+                <div class="preco-atual">R$ 3.604,78 <span class="pix">no pix</span></div>
+                <div class="desconto">-19% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV LG 65\' LED UHD 4K 65UA8550PSA, a7 AI Processor 4K Gen8', 3604.784810126582, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/439576-300-300/p_60695_alta_1.jpg?v=638871715714470000', '67884')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/444534-300-300/p_60557_alta_6.jpg?v=638900793449300000" alt="Produto">
+            <div class="codigo">Cód.: 67642</div>
+            <div class="titulo">Smart TV LED 4K 50" LG 50UA8550PSA, Processor 4K Gen8 e Chatbot de IA</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 3.119,84 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV LED 4K 50\' LG 50UA8550PSA, Processor 4K Gen8 e Chatbot de IA', 3119.8354430379745, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/444534-300-300/p_60557_alta_6.jpg?v=638900793449300000', '67642')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/433887-300-300/p_60520_alta_1.jpg?v=638844714988070000" alt="Produto">
+            <div class="codigo">Cód.: 67637</div>
+            <div class="titulo">Samsung Smart TV LED 4K 75" UN75U8100</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 6.831,65 por</div>
+                <div class="preco-atual">R$ 5.092,71 <span class="pix">no pix</span></div>
+                <div class="desconto">-20% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Smart TV LED 4K 75\' UN75U8100', 5092.708860759493, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/433887-300-300/p_60520_alta_1.jpg?v=638844714988070000', '67637')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435091-300-300/p_60531_alta_1.jpg?v=638845773911430000" alt="Produto">
+            <div class="codigo">Cód.: 67634</div>
+            <div class="titulo">Samsung Smart TV 55" Crystal UHD 4K U8100F 2025, Processador Crystal 4K, Xbox Cloud Gaming | Preta</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 3.644,30 por</div>
+                <div class="preco-atual">R$ 2.891,75 <span class="pix">no pix</span></div>
+                <div class="desconto">-15% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Smart TV 55\' Crystal UHD 4K U8100F 2025, Processador Crystal 4K, Xbox Cloud Gaming | Preta', 2891.746835443038, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435091-300-300/p_60531_alta_1.jpg?v=638845773911430000', '67634')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435095-300-300/p_60540_alta_1.jpg?v=638845774661630000" alt="Produto">
+            <div class="codigo">Cód.: 67631</div>
+            <div class="titulo">Samsung Smart TV 50" LED 4K UN50U8600, Alexa Integrada</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 3.312,66 por</div>
+                <div class="preco-atual">R$ 2.591,27 <span class="pix">no pix</span></div>
+                <div class="desconto">-16% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Smart TV 50\' LED 4K UN50U8600, Alexa Integrada', 2591.26582278481, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435095-300-300/p_60540_alta_1.jpg?v=638845774661630000', '67631')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/444692-300-300/p_60783_alta_1.jpg?v=638905354046070000" alt="Produto">
+            <div class="codigo">Cód.: 100077</div>
+            <div class="titulo">Smart TV LED HD 32" SEMP 32S42, HDR10, Dolby Audio, Bluetooth 5.0, Wi-Fi e Google</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.251,99 por</div>
+                <div class="preco-atual">R$ 1.060,38 <span class="pix">no pix</span></div>
+                <div class="desconto">-9% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV LED HD 32\' SEMP 32S42, HDR10, Dolby Audio, Bluetooth 5.0, Wi-Fi e Google', 1060.379746835443, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/444692-300-300/p_60783_alta_1.jpg?v=638905354046070000', '100077')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435063-300-300/p_60523_alta_1.jpg?v=638845772134770000" alt="Produto">
+            <div class="codigo">Cód.: 67639</div>
+            <div class="titulo">Samsung Smart TV LED HD 32" UN32H5000F</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.586,08 por</div>
+                <div class="preco-atual">R$ 1.232,52 <span class="pix">no pix</span></div>
+                <div class="desconto">-17% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Smart TV LED HD 32\' UN32H5000F', 1232.5189873417721, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435063-300-300/p_60523_alta_1.jpg?v=638845772134770000', '67639')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/444687-300-300/p_60782_alta_1.jpg?v=638905353787000000" alt="Produto">
+            <div class="codigo">Cód.: 100074</div>
+            <div class="titulo">Smart TV LED Resolução FHD 43" SEMP 43S42, HDR10, Dolby Audio, Bluetooth 5.0, Wi-Fi, Google Cast</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.881,01 por</div>
+                <div class="preco-atual">R$ 1.662,32 <span class="pix">no pix</span></div>
+                <div class="desconto">-5% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV LED Resolução FHD 43\' SEMP 43S42, HDR10, Dolby Audio, Bluetooth 5.0, Wi-Fi, Google Cast', 1662.3164556962024, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/444687-300-300/p_60782_alta_1.jpg?v=638905353787000000', '100074')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/434997-300-300/p_60534_alta_1.jpg?v=638845665957130000" alt="Produto">
+            <div class="codigo">Cód.: 67629</div>
+            <div class="titulo">Smart TV Samsung 43" Crystal UHD 4K U8100 - UN43U8100</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.812,66 por</div>
+                <div class="preco-atual">R$ 2.328,23 <span class="pix">no pix</span></div>
+                <div class="desconto">-11% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV Samsung 43\' Crystal UHD 4K U8100 - UN43U8100', 2328.227848101266, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/434997-300-300/p_60534_alta_1.jpg?v=638845665957130000', '67629')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/284101-300-300/p_57083_alta_1.png?v=638828456633100000" alt="Produto">
+            <div class="codigo">Cód.: 67322</div>
+            <div class="titulo">Smart TV AOC 43" Full HD Roku 43S5135/78G | Preta</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.049,37 por</div>
+                <div class="preco-atual">R$ 1.715,05 <span class="pix">no pix</span></div>
+                <div class="desconto">-10% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV AOC 43\' Full HD Roku 43S5135/78G | Preta', 1715.0506329113925, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/284101-300-300/p_57083_alta_1.png?v=638828456633100000', '67322')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/386695-300-300/p_59064_alta_1.jpg?v=638828509087270000" alt="Produto">
+            <div class="codigo">Cód.: 67588</div>
+            <div class="titulo">Samsung Smart TV 65" UHD 4K 65DU7700, Processador Crystal 4K, Gaming Hub | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 4.929,11 por</div>
+                <div class="preco-atual">R$ 3.822,82 <span class="pix">no pix</span></div>
+                <div class="desconto">-17% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Smart TV 65\' UHD 4K 65DU7700, Processador Crystal 4K, Gaming Hub | Preto', 3822.8227848101264, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/386695-300-300/p_59064_alta_1.jpg?v=638828509087270000', '67588')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435075-300-300/p_60536_alta_1.jpg?v=638845772892000000" alt="Produto">
+            <div class="codigo">Cód.: 67635</div>
+            <div class="titulo">Samsung Smart TV 65" Crystal UHD 4K U8100F 2025 | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 4.853,16 por</div>
+                <div class="preco-atual">R$ 3.892,68 <span class="pix">no pix</span></div>
+                <div class="desconto">-14% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Smart TV 65\' Crystal UHD 4K U8100F 2025 | Preto', 3892.683544303797, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435075-300-300/p_60536_alta_1.jpg?v=638845772892000000', '67635')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/392497-300-300/p_59387_alta_1.jpg?v=638828456996300000" alt="Produto">
+            <div class="codigo">Cód.: 67598</div>
+            <div class="titulo">Smart TV 43" LG FULL HD 43LR6700PSA | Ashed Blue</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.320,25 por</div>
+                <div class="preco-atual">R$ 1.863,10 <span class="pix">no pix</span></div>
+                <div class="desconto">-14% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV 43\' LG FULL HD 43LR6700PSA | Ashed Blue', 1863.1012658227846, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/392497-300-300/p_59387_alta_1.jpg?v=638828456996300000', '67598')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/443828-300-300/a_100059_alta_1.jpg?v=638895675541200000" alt="Produto">
+            <div class="codigo">Cód.: 100059</div>
+            <div class="titulo">Smart Monitor TV HD 32" Samsung, Smart TV com Tizen, Wi-Fi, HDR, USB, HDMI - LS32H5000FGXZD Bivolt | Preta</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.554,43 por</div>
+                <div class="preco-atual">R$ 1.284,90 <span class="pix">no pix</span></div>
+                <div class="desconto">-11% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart Monitor TV HD 32\' Samsung, Smart TV com Tizen, Wi-Fi, HDR, USB, HDMI - LS32H5000FGXZD Bivolt | Preta', 1284.8987341772151, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/443828-300-300/a_100059_alta_1.jpg?v=638895675541200000', '100059')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/442897-300-300/p_60537_alta_1.jpg?v=638892510526270000" alt="Produto">
+            <div class="codigo">Cód.: 67630</div>
+            <div class="titulo">TV LED FHD 43 SAMSUNG UN43F6000F, Smart TV, Wi-Fi Integrado, HDR10+, USB, HDMI, Guia de Voz Bivolt</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 2.290,48 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('TV LED FHD 43 SAMSUNG UN43F6000F, Smart TV, Wi-Fi Integrado, HDR10+, USB, HDMI, Guia de Voz Bivolt', 2290.481012658228, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/442897-300-300/p_60537_alta_1.jpg?v=638892510526270000', '67630')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435170-300-300/p_60573_alta_11.jpg?v=638846350989130000" alt="Produto">
+            <div class="codigo">Cód.: 67646</div>
+            <div class="titulo">Smart TV LED 4K 86" Philips 86PUG7019 Google TV | Preta Mate</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 6.563,51 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV LED 4K 86\' Philips 86PUG7019 Google TV | Preta Mate', 6563.506329113924, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435170-300-300/p_60573_alta_11.jpg?v=638846350989130000', '67646')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435055-300-300/p_60521_alta_1.jpg?v=638845771325130000" alt="Produto">
+            <div class="codigo">Cód.: 67632</div>
+            <div class="titulo">Samsung Vision AI Smart TV 50" QLED 4K, Processador Q4 AI | Cinza Titan</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 3.698,73 por</div>
+                <div class="preco-atual">R$ 2.786,00 <span class="pix">no pix</span></div>
+                <div class="desconto">-19% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Vision AI Smart TV 50\' QLED 4K, Processador Q4 AI | Cinza Titan', 2786.0, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435055-300-300/p_60521_alta_1.jpg?v=638845771325130000', '67632')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/413636-300-300/p-59937-alta-1.jpg?v=638828455099800000" alt="Produto">
+            <div class="codigo">Cód.: 67624</div>
+            <div class="titulo">Smart TV AOC 32" DLED HD Roku 32S5045/78G | Preta</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.230,96 por</div>
+                <div class="preco-atual">R$ 1.015,68 <span class="pix">no pix</span></div>
+                <div class="desconto">-11% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV AOC 32\' DLED HD Roku 32S5045/78G | Preta', 1015.6835443037974, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/413636-300-300/p-59937-alta-1.jpg?v=638828455099800000', '67624')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/437915-300-300/p_60644_alta_1.jpg?v=638866296048870000" alt="Produto">
+            <div class="codigo">Cód.: 67648</div>
+            <div class="titulo">Smart TV TCL 55" QLED 4K P7K, Google TV, Wi-Fi Dual Band, Dolby Vision, Dolby Atmos</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 2.920,01 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV TCL 55\' QLED 4K P7K, Google TV, Wi-Fi Dual Band, Dolby Vision, Dolby Atmos', 2920.012658227848, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/437915-300-300/p_60644_alta_1.jpg?v=638866296048870000', '67648')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/442927-300-300/p_60525_alta_1.jpg?v=638892511127830000" alt="Produto">
+            <div class="codigo">Cód.: 67633</div>
+            <div class="titulo">Samsung Vision AI Smart TV 55" QLED 4K UHD, Processador Q4 AI | Cinza Titan</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 4.254,43 por</div>
+                <div class="preco-atual">R$ 3.179,13 <span class="pix">no pix</span></div>
+                <div class="desconto">-20% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Vision AI Smart TV 55\' QLED 4K UHD, Processador Q4 AI | Cinza Titan', 3179.1265822784812, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/442927-300-300/p_60525_alta_1.jpg?v=638892511127830000', '67633')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/437111-300-300/p_56407_alta_18.png?v=638857034157570000" alt="Produto">
+            <div class="codigo">Cód.: 67299</div>
+            <div class="titulo">Smart TV Aiwa LED 4K 55" Ultra HD, Android TV, Borda Ultrafina, HDR10, Screencast | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.963,29 por</div>
+                <div class="preco-atual">R$ 2.536,75 <span class="pix">no pix</span></div>
+                <div class="desconto">-8% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV Aiwa LED 4K 55\' Ultra HD, Android TV, Borda Ultrafina, HDR10, Screencast | Preto', 2536.746835443038, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/437111-300-300/p_56407_alta_18.png?v=638857034157570000', '67299')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/444138-300-300/a_100073_alta_1.jpg?v=638895862623870000" alt="Produto">
+            <div class="codigo">Cód.: 100073</div>
+            <div class="titulo">Smart Monitor TV 43" , Resolução FHD , Plataforma Tizen , com Bixby (Voice Ready) , HDR10+ e TV Plus - LS43F6000FGXZD Bivolt | Preta</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.324,05 por</div>
+                <div class="preco-atual">R$ 1.880,72 <span class="pix">no pix</span></div>
+                <div class="desconto">-13% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart Monitor TV 43\' , Resolução FHD , Plataforma Tizen , com Bixby (Voice Ready) , HDR10+ e TV Plus - LS43F6000FGXZD Bivolt | Preta', 1880.7215189873416, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/444138-300-300/a_100073_alta_1.jpg?v=638895862623870000', '100073')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/375125-300-300/p_59062_alta_1.jpg?v=638828507846970000" alt="Produto">
+            <div class="codigo">Cód.: 67576</div>
+            <div class="titulo">Smart TV LED 43" Semp Roku R6610 FHD Wifi dual band | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 1.921,24 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV LED 43\' Semp Roku R6610 FHD Wifi dual band | Preto', 1921.2405063291137, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/375125-300-300/p_59062_alta_1.jpg?v=638828507846970000', '67576')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/439560-300-300/p_60697_alta_1.jpg?v=638871715390500000" alt="Produto">
+            <div class="codigo">Cód.: 67886</div>
+            <div class="titulo">Smart TV LG 65" QNED 4K 65QNED85ASG, Processador a8 AI Gen2, 144Hz, Dolby Vision, Dolby Atmos</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 7.122,78 por</div>
+                <div class="preco-atual">R$ 5.437,67 <span class="pix">no pix</span></div>
+                <div class="desconto">-18% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV LG 65\' QNED 4K 65QNED85ASG, Processador a8 AI Gen2, 144Hz, Dolby Vision, Dolby Atmos', 5437.670886075949, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/439560-300-300/p_60697_alta_1.jpg?v=638871715390500000', '67886')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/433455-300-300/p_60526_alta_1.jpg?v=638841408210070000" alt="Produto">
+            <div class="codigo">Cód.: 67640</div>
+            <div class="titulo">TV LED 4K 85 Samsung UN85U8600, Xbox Cloud Gaming, Alexa</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 10.036,71 por</div>
+                <div class="preco-atual">R$ 8.118,72 <span class="pix">no pix</span></div>
+                <div class="desconto">-13% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('TV LED 4K 85 Samsung UN85U8600, Xbox Cloud Gaming, Alexa', 8118.721518987341, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/433455-300-300/p_60526_alta_1.jpg?v=638841408210070000', '67640')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/440436-300-300/p_60699_alta_1.jpg?v=638874816283600000" alt="Produto">
+            <div class="codigo">Cód.: 67887</div>
+            <div class="titulo">Smart TV LG 75" QNED 4K 75QNED85ASG, Processador a8 AI Ger2, 144Hz, Dolby Vision, Dolby Atmos</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 12.634,18 por</div>
+                <div class="preco-atual">R$ 8.561,90 <span class="pix">no pix</span></div>
+                <div class="desconto">-27% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV LG 75\' QNED 4K 75QNED85ASG, Processador a8 AI Ger2, 144Hz, Dolby Vision, Dolby Atmos', 8561.898734177214, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/440436-300-300/p_60699_alta_1.jpg?v=638874816283600000', '67887')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/443472-300-300/a_100045_alta_1.jpg?v=638894839251670000" alt="Produto">
+            <div class="codigo">Cód.: 100045</div>
+            <div class="titulo">Smart TV Philips 75" 4K , Google TV , Processador Quad Core , Google Assistente e Chromecast integrados , Dolby Audio, Design Sem Bordas | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 5.715,19 por</div>
+                <div class="preco-atual">R$ 5.058,35 <span class="pix">no pix</span></div>
+                <div class="desconto">-5% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV Philips 75\' 4K , Google TV , Processador Quad Core , Google Assistente e Chromecast integrados , Dolby Audio, Design Sem Bordas | Preto', 5058.354430379746, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/443472-300-300/a_100045_alta_1.jpg?v=638894839251670000', '100045')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435083-300-300/p_60538_alta_1.jpg?v=638845773453970000" alt="Produto">
+            <div class="codigo">Cód.: 67636</div>
+            <div class="titulo">Samsung Vision AI TV 65" QLED Q7F 4K 2025, Pontos Quânticos, Processador com AI, Xbox Cloud Gaming | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 5.370,89 por</div>
+                <div class="preco-atual">R$ 4.543,90 <span class="pix">no pix</span></div>
+                <div class="desconto">-9% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Vision AI TV 65\' QLED Q7F 4K 2025, Pontos Quânticos, Processador com AI, Xbox Cloud Gaming | Preto', 4543.8987341772145, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435083-300-300/p_60538_alta_1.jpg?v=638845773453970000', '67636')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/382851-300-300/p_59288_alta_1.jpg?v=638828508369030000" alt="Produto">
+            <div class="codigo">Cód.: 67593</div>
+            <div class="titulo">Samsung Smart TV 65 " QLED 4K The Frame 65LS03D, Dolby Atmos, Controle SolarCell | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 9.630,38 por</div>
+                <div class="preco-atual">R$ 8.258,76 <span class="pix">no pix</span></div>
+                <div class="desconto">-8% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Smart TV 65 \' QLED 4K The Frame 65LS03D, Dolby Atmos, Controle SolarCell | Preto', 8258.759493670887, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/382851-300-300/p_59288_alta_1.jpg?v=638828508369030000', '67593')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/373068-300-300/p_59031_alta_1.jpg?v=638828454678630000" alt="Produto">
+            <div class="codigo">Cód.: 67573</div>
+            <div class="titulo">Smart TV Aiwa 50", Android 4K, Borda Ultrafina, HDR10, Dolby Áudio</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.755,70 por</div>
+                <div class="preco-atual">R$ 2.408,65 <span class="pix">no pix</span></div>
+                <div class="desconto">-6% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV Aiwa 50\', Android 4K, Borda Ultrafina, HDR10, Dolby Áudio', 2408.645569620253, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/373068-300-300/p_59031_alta_1.jpg?v=638828454678630000', '67573')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/439546-300-300/p_60700_alta_1.jpg?v=638871715293800000" alt="Produto">
+            <div class="codigo">Cód.: 67893</div>
+            <div class="titulo">Smart TV AOC-PHILIPS 43" LED FHD 43S55045/78 ROKU</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 1.932,38 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV AOC-PHILIPS 43\' LED FHD 43S55045/78 ROKU', 1932.3797468354428, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/439546-300-300/p_60700_alta_1.jpg?v=638871715293800000', '67893')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446656-300-300/p_60847_alta_1.jpg?v=638919866021500000" alt="Produto">
+            <div class="codigo">Cód.: 100419</div>
+            <div class="titulo">Smart TV NEO QLED 55 Samsung QN70F 4K, Neo Quantum HDR10+, HDMI 2.1 144Hz, Wi-Fi 5, Bluetooth 5.3, Alexa Integrada e Design AirSlim</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 5.622,78 por</div>
+                <div class="preco-atual">R$ 4.287,68 <span class="pix">no pix</span></div>
+                <div class="desconto">-18% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV NEO QLED 55 Samsung QN70F 4K, Neo Quantum HDR10+, HDMI 2.1 144Hz, Wi-Fi 5, Bluetooth 5.3, Alexa Integrada e Design AirSlim', 4287.683544303797, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446656-300-300/p_60847_alta_1.jpg?v=638919866021500000', '100419')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446683-300-300/a_100297_alta_9.jpg?v=638919866136870000" alt="Produto">
+            <div class="codigo">Cód.: 100297</div>
+            <div class="titulo">Samsung Vision AI TV 43" Neo QLED 4K, Processador com AI , Tela Matte Livre de Reflexos , Painel de até 165Hz , Modo Game com AI - Bivolt Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 5.125,32 por</div>
+                <div class="preco-atual">R$ 3.975,94 <span class="pix">no pix</span></div>
+                <div class="desconto">-17% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Vision AI TV 43\' Neo QLED 4K, Processador com AI , Tela Matte Livre de Reflexos , Painel de até 165Hz , Modo Game com AI - Bivolt Preto', 3975.936708860759, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446683-300-300/a_100297_alta_9.jpg?v=638919866136870000', '100297')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/422220-300-300/p_60113_alta_1.jpg?v=638785321327530000" alt="Produto">
+            <div class="codigo">Cód.: 67625</div>
+            <div class="titulo">Smart TV LED 4K UHD 55" TCL Google TV, Wi-Fi Dual Band, Google Assistente | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 3.169,62 por</div>
+                <div class="preco-atual">R$ 2.709,63 <span class="pix">no pix</span></div>
+                <div class="desconto">-8% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV LED 4K UHD 55\' TCL Google TV, Wi-Fi Dual Band, Google Assistente | Preto', 2709.6329113924053, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/422220-300-300/p_60113_alta_1.jpg?v=638785321327530000', '67625')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/406284-300-300/p_59738_alta_1.jpg?v=638667546939670000" alt="Produto">
+            <div class="codigo">Cód.: 67614</div>
+            <div class="titulo">Smart TV Philips 43" LED FHD 43PFG6909, Google TV, sem bordas | Preta</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 2.183,54 por</div>
+                <div class="preco-atual">R$ 1.812,77 <span class="pix">no pix</span></div>
+                <div class="desconto">-11% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV Philips 43\' LED FHD 43PFG6909, Google TV, sem bordas | Preta', 1812.772151898734, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/406284-300-300/p_59738_alta_1.jpg?v=638667546939670000', '67614')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/396437-300-300/p_59667_alta_1.jpg?v=638829099376800000" alt="Produto">
+            <div class="codigo">Cód.: 67610</div>
+            <div class="titulo">Smart TV 4K 65" LG UHD 65UT8050 | Rocky Black</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 4.912,66 por</div>
+                <div class="preco-atual">R$ 3.636,38 <span class="pix">no pix</span></div>
+                <div class="desconto">-20% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV 4K 65\' LG UHD 65UT8050 | Rocky Black', 3636.379746835443, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/396437-300-300/p_59667_alta_1.jpg?v=638829099376800000', '67610')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/385520-300-300/p_59059_alta_1.jpg?v=638829102204700000" alt="Produto">
+            <div class="codigo">Cód.: 67580</div>
+            <div class="titulo">Samsung AI Gaming TV 50" Neo QLED 4K, Processador com AI, AI Auto Game Mode | Dark Titan</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 6.182,28 por</div>
+                <div class="preco-atual">R$ 5.150,68 <span class="pix">no pix</span></div>
+                <div class="desconto">-10% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung AI Gaming TV 50\' Neo QLED 4K, Processador com AI, AI Auto Game Mode | Dark Titan', 5150.683544303797, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/385520-300-300/p_59059_alta_1.jpg?v=638829102204700000', '67580')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/442568-300-300/a_67881_alta_2.jpg?v=638889845770400000" alt="Produto">
+            <div class="codigo">Cód.: 67881</div>
+            <div class="titulo">Hisense Mini Projetor Portátil C2 Ultra 4K UHD RGB a laser, 65"-300", 3000 ANSI Lumens, Dolby Vision, Alto-Falante JBL, Comando de Voz</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 17.784,13 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Hisense Mini Projetor Portátil C2 Ultra 4K UHD RGB a laser, 65\'-300\', 3000 ANSI Lumens, Dolby Vision, Alto-Falante JBL, Comando de Voz', 17784.12658227848, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/442568-300-300/a_67881_alta_2.jpg?v=638889845770400000', '67881')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446936-300-300/a_100452_alta_6.jpg?v=638921526313870000" alt="Produto">
+            <div class="codigo">Cód.: 100452</div>
+            <div class="titulo">Smart TV LED 55 SEMP S62 4K UHD Google TV, HDR10+, HDMI 2.1, Wi-Fi Dual Band, Bluetooth 5.2, Dolby Audio e Comando por Voz com Google Assistente</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 2.605,25 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV LED 55 SEMP S62 4K UHD Google TV, HDR10+, HDMI 2.1, Wi-Fi Dual Band, Bluetooth 5.2, Dolby Audio e Comando por Voz com Google Assistente', 2605.253164556962, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446936-300-300/a_100452_alta_6.jpg?v=638921526313870000', '100452')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/382129-300-300/p_59070_alta_1.jpg?v=638829102573770000" alt="Produto">
+            <div class="codigo">Cód.: 67582</div>
+            <div class="titulo">Samsung AI Gaming TV 55" OLED 4K, Processador com AI, Alexa, Design Laser Slim | Preto/Grafite</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 8.589,87 por</div>
+                <div class="preco-atual">R$ 6.715,84 <span class="pix">no pix</span></div>
+                <div class="desconto">-16% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung AI Gaming TV 55\' OLED 4K, Processador com AI, Alexa, Design Laser Slim | Preto/Grafite', 6715.835443037975, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/382129-300-300/p_59070_alta_1.jpg?v=638829102573770000', '67582')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/385503-300-300/p_59060_alta_1.jpg?v=638829102681000000" alt="Produto">
+            <div class="codigo">Cód.: 67581</div>
+            <div class="titulo">Samsung AI Gaming TV 55" Neo QLED 4K, AI Auto Game Mode | Dark Titan</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 6.821,52 por</div>
+                <div class="preco-atual">R$ 5.173,68 <span class="pix">no pix</span></div>
+                <div class="desconto">-18% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung AI Gaming TV 55\' Neo QLED 4K, AI Auto Game Mode | Dark Titan', 5173.683544303797, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/385503-300-300/p_59060_alta_1.jpg?v=638829102681000000', '67581')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/385536-300-300/p_59058_alta_1.jpg?v=638829102453070000" alt="Produto">
+            <div class="codigo">Cód.: 67579</div>
+            <div class="titulo">Samsung AI Gaming TV 43" Neo QLED 4K, Processador com AI, Upscaling 4K, Mini LED, AI Auto Game Mode | Dark Titan</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 5.425,32 por</div>
+                <div class="preco-atual">R$ 4.118,54 <span class="pix">no pix</span></div>
+                <div class="desconto">-18% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung AI Gaming TV 43\' Neo QLED 4K, Processador com AI, Upscaling 4K, Mini LED, AI Auto Game Mode | Dark Titan', 4118.544303797468, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/385536-300-300/p_59058_alta_1.jpg?v=638829102453070000', '67579')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/405749-300-300/p_59736_alta_1.jpg?v=638829107772870000" alt="Produto">
+            <div class="codigo">Cód.: 67613</div>
+            <div class="titulo">Smart TV Philips 32" LED HD 32PHG6909, Google TV, Sem Bordas | Preta</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 1.589,87 por</div>
+                <div class="preco-atual">R$ 1.271,65 <span class="pix">no pix</span></div>
+                <div class="desconto">-14% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV Philips 32\' LED HD 32PHG6909, Google TV, Sem Bordas | Preta', 1271.6455696202531, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/405749-300-300/p_59736_alta_1.jpg?v=638829107772870000', '67613')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/404036-300-300/p_59750_alta_1.jpg?v=638829096022730000" alt="Produto">
+            <div class="codigo">Cód.: 67618</div>
+            <div class="titulo">Smart TV 65" 4K LG OLED65C4PSA Evo, 120Hz, G-Sync, FreeSync, ThinQ AI, Alexa, Google, Design Ultra Slim Dolby | Preta</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 16.360,76 por</div>
+                <div class="preco-atual">R$ 11.437,32 <span class="pix">no pix</span></div>
+                <div class="desconto">-25% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV 65\' 4K LG OLED65C4PSA Evo, 120Hz, G-Sync, FreeSync, ThinQ AI, Alexa, Google, Design Ultra Slim Dolby | Preta', 11437.316455696202, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/404036-300-300/p_59750_alta_1.jpg?v=638829096022730000', '67618')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/390390-300-300/p_59464_alta_1.jpg?v=638607240873000000" alt="Produto">
+            <div class="codigo">Cód.: 67602</div>
+            <div class="titulo">Smart TV Philips 50" LED 4K UHD 50PUG7019, Google TV | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 2.598,89 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV Philips 50\' LED 4K UHD 50PUG7019, Google TV | Preto', 2598.886075949367, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/390390-300-300/p_59464_alta_1.jpg?v=638607240873000000', '67602')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/437951-300-300/p_60647_alta_1.jpg?v=638866325323730000" alt="Produto">
+            <div class="codigo">Cód.: 67880</div>
+            <div class="titulo">Smart TV TCL 85" QLED 4K P7K, Google TV, Wi-Fi Dual Band, Dolby Vision, Dolby Atmos</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 9.012,66 por</div>
+                <div class="preco-atual">R$ 8.129,33 <span class="pix">no pix</span></div>
+                <div class="desconto">-3% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV TCL 85\' QLED 4K P7K, Google TV, Wi-Fi Dual Band, Dolby Vision, Dolby Atmos', 8129.32911392405, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/437951-300-300/p_60647_alta_1.jpg?v=638866325323730000', '67880')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435067-300-300/p_60529_alta_1.jpg?v=638845772465100000" alt="Produto">
+            <div class="codigo">Cód.: 67641</div>
+            <div class="titulo">Samsung Smart TV QLED 4K 85" QN85Q7F | Preta</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 10.726,58 por</div>
+                <div class="preco-atual">R$ 9.508,51 <span class="pix">no pix</span></div>
+                <div class="desconto">-5% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Smart TV QLED 4K 85\' QN85Q7F | Preta', 9508.506329113923, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/435067-300-300/p_60529_alta_1.jpg?v=638845772465100000', '67641')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446848-300-300/a_100233_alta_15.jpg?v=638920764332700000" alt="Produto">
+            <div class="codigo">Cód.: 100233</div>
+            <div class="titulo">Smart TV 4K QNED 65" LG , Processador a7 Al Ger8 4K , webOS 25 , Chatbot de IA , Reconhecimento de Voz Inteligente , Bivolt Charcoal Black</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 4.997,47 por</div>
+                <div class="preco-atual">R$ 4.097,95 <span class="pix">no pix</span></div>
+                <div class="desconto">-12% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV 4K QNED 65\' LG , Processador a7 Al Ger8 4K , webOS 25 , Chatbot de IA , Reconhecimento de Voz Inteligente , Bivolt Charcoal Black', 4097.949367088608, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446848-300-300/a_100233_alta_15.jpg?v=638920764332700000', '100233')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/397419-300-300/p_59666_alta_1.jpg?v=638828458638400000" alt="Produto">
+            <div class="codigo">Cód.: 67609</div>
+            <div class="titulo">Smart TV 4K 55" LG UHD 55UT8050 | Rocky Black</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 3.606,33 por</div>
+                <div class="preco-atual">R$ 2.634,90 <span class="pix">no pix</span></div>
+                <div class="desconto">-21% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV 4K 55\' LG UHD 55UT8050 | Rocky Black', 2634.8987341772154, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/397419-300-300/p_59666_alta_1.jpg?v=638828458638400000', '67609')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446657-300-300/a_100025_alta_1.jpg?v=638919866023470000" alt="Produto">
+            <div class="codigo">Cód.: 100025</div>
+            <div class="titulo">Smart TV LG AI 86" 4K Processador a7 Al Gen8, Amazon Alexa e Google Cast integrados, Otimizador de Jogos, webOS 25 e Bivolt Charcoal Black</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 9.546,84 por</div>
+                <div class="preco-atual">R$ 7.626,20 <span class="pix">no pix</span></div>
+                <div class="desconto">-14% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV LG AI 86\' 4K Processador a7 Al Gen8, Amazon Alexa e Google Cast integrados, Otimizador de Jogos, webOS 25 e Bivolt Charcoal Black', 7626.202531645569, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446657-300-300/a_100025_alta_1.jpg?v=638919866023470000', '100025')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446930-300-300/p_60839_alta_1.jpg?v=638920962222430000" alt="Produto">
+            <div class="codigo">Cód.: 100257</div>
+            <div class="titulo">Smart TV 4K QNED 86" LG, Processador a7 AI Gen8 4K, webOS 25, Chatbot de IA, Reconhecimento de Voz Inteligente, Otimizador de Jogos 86QNED82ASA</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 16.808,86 por</div>
+                <div class="preco-atual">R$ 12.166,30 <span class="pix">no pix</span></div>
+                <div class="desconto">-22% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV 4K QNED 86\' LG, Processador a7 AI Gen8 4K, webOS 25, Chatbot de IA, Reconhecimento de Voz Inteligente, Otimizador de Jogos 86QNED82ASA', 12166.303797468352, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446930-300-300/p_60839_alta_1.jpg?v=638920962222430000', '100257')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/404012-300-300/p_59751_alta_1.jpg?v=638829095900270000" alt="Produto">
+            <div class="codigo">Cód.: 67619</div>
+            <div class="titulo">Smart TV 55" 4K LG OLED55C4PSA Evo, 120Hz, G-Sync, FreeSync, ThinQ AI, Alexa, Google, Design Ultra Slim Dolby | Preta</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 9.111,39 por</div>
+                <div class="preco-atual">R$ 5.830,68 <span class="pix">no pix</span></div>
+                <div class="desconto">-31% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV 55\' 4K LG OLED55C4PSA Evo, 120Hz, G-Sync, FreeSync, ThinQ AI, Alexa, Google, Design Ultra Slim Dolby | Preta', 5830.683544303797, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/404012-300-300/p_59751_alta_1.jpg?v=638829095900270000', '67619')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/420004-300-300/p_60127_alta_1.jpg?v=638769507474300000" alt="Produto">
+            <div class="codigo">Cód.: 67627</div>
+            <div class="titulo">Samsung Smart TV 98" LED Super Big 4K 98DU9000, Crystal UHD 4K, Painel até 120Hz, Gaming Hub, AI Energy Mode, Som em Movimento | Preta</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 25.305,06 por</div>
+                <div class="preco-atual">R$ 17.858,14 <span class="pix">no pix</span></div>
+                <div class="desconto">-24% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Smart TV 98\' LED Super Big 4K 98DU9000, Crystal UHD 4K, Painel até 120Hz, Gaming Hub, AI Energy Mode, Som em Movimento | Preta', 17858.139240506327, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/420004-300-300/p_60127_alta_1.jpg?v=638769507474300000', '67627')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/325836-300-300/p_58016_alta_1.png?v=638829099148770000" alt="Produto">
+            <div class="codigo">Cód.: 67552</div>
+            <div class="titulo">Smart TV 65" 4K UHD LG OLED65C3PSA Evo, G-Sync, FreeSync, ThinQ AI | Titanium Gray</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 15.213,42 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV 65\' 4K UHD LG OLED65C3PSA Evo, G-Sync, FreeSync, ThinQ AI | Titanium Gray', 15213.417721518987, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/325836-300-300/p_58016_alta_1.png?v=638829099148770000', '67552')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/424194-300-300/a_67628_alta_1.jpg?v=638828507995830000" alt="Produto">
+            <div class="codigo">Cód.: 67628</div>
+            <div class="titulo">Samsung Smart TV LED 43" LH43BETMLGGXZD, Sistema Operacional Tizen e Dolby Digital Plus | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo"></div>
+                <div class="preco-atual">R$ 2.388,41 <span class="pix">no pix</span></div>
+                <div class="desconto"></div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Samsung Smart TV LED 43\' LH43BETMLGGXZD, Sistema Operacional Tizen e Dolby Digital Plus | Preto', 2388.405063291139, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/424194-300-300/a_67628_alta_1.jpg?v=638828507995830000', '67628')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446908-300-300/a_100208_alta_1.jpg?v=638920951482130000" alt="Produto">
+            <div class="codigo">Cód.: 100208</div>
+            <div class="titulo">Smart TV 4K QNED 55" LG , Processador a7 Al Ger8 4K , webOS 25 , Chatbot de IA , Reconhecimento de Voz Inteligente , Bivolt Charcoal Black</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 3.829,11 por</div>
+                <div class="preco-atual">R$ 3.050,05 <span class="pix">no pix</span></div>
+                <div class="desconto">-14% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV 4K QNED 55\' LG , Processador a7 Al Ger8 4K , webOS 25 , Chatbot de IA , Reconhecimento de Voz Inteligente , Bivolt Charcoal Black', 3050.0506329113923, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446908-300-300/a_100208_alta_1.jpg?v=638920951482130000', '100208')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446288-300-300/p_60850_alta_1.jpg?v=638917284376300000" alt="Produto">
+            <div class="codigo">Cód.: 100440</div>
+            <div class="titulo">Smart TV QLED 55? Samsung The Frame LS03F 4K, Quantum HDR, Dolby Atmos, Wi-Fi 5, Bluetooth 5.3, Alexa Integrada, Tela Matte Antirreflexo</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 6.084,81 por</div>
+                <div class="preco-atual">R$ 5.033,76 <span class="pix">no pix</span></div>
+                <div class="desconto">-11% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV QLED 55? Samsung The Frame LS03F 4K, Quantum HDR, Dolby Atmos, Wi-Fi 5, Bluetooth 5.3, Alexa Integrada, Tela Matte Antirreflexo', 5033.759493670886, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/446288-300-300/p_60850_alta_1.jpg?v=638917284376300000', '100440')">Adicionar ao Carrinho</button>        </div>
+
+        <div class="produto">
+            <img src="https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/390597-300-300/p_59568_alta_1.jpg?v=638828460012000000" alt="Produto">
+            <div class="codigo">Cód.: 67606</div>
+            <div class="titulo">Smart TV Philips 55" LED 4K UHD 55PUG7019, Google TV | Preto</div>
+            <div class="precos">
+                <div class="preco-antigo">De R$ 3.073,42 por</div>
+                <div class="preco-atual">R$ 2.504,53 <span class="pix">no pix</span></div>
+                <div class="desconto">-12% OFF</div>
+            </div>
+            <button class="add-btn" onclick="adicionarCarrinho('Smart TV Philips 55\' LED 4K UHD 55PUG7019, Google TV | Preto', 2504.53164556962, 'https://fujiokadistribuidor.vteximg.com.br/arquivos/ids/390597-300-300/p_59568_alta_1.jpg?v=638828460012000000', '67606')">Adicionar ao Carrinho</button>        </div>
+
+    </div>
+
+    <script>
+        // ====== CARRINHO ======
+        let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+
+        function salvarCarrinho() {
+            localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        }
+
+        function atualizarContador() {
+            const count = carrinho.reduce((acc, item) => acc + item.qtd, 0);
+            document.getElementById('cart-count').textContent = count;
+        }
+
+        function animarCarrinho() {
+            const icon = document.getElementById('cart-icon');
+            icon.classList.add('bounce');
+            setTimeout(() => icon.classList.remove('bounce'), 400);
+        }
+
+      /*  function adicionarCarrinho(titulo, preco, imagem) {
+            const item = carrinho.find(p => p.titulo === titulo);
+            if (item) {
+                item.qtd += 1;
+            } else {
+                carrinho.push({ titulo, preco, imagem, qtd: 1 });
+            }
+            salvarCarrinho();
+            atualizarContador();
+            animarCarrinho();
+            atualizarDropdown();
+        }*/
+
+        function adicionarCarrinho(titulo, preco, imagem, codigo = '') {
+            const item = carrinho.find(p => (codigo ? p.codigo === codigo : p.titulo === titulo));
+            if (item) {
+                item.qtd += 1;
+            } else {
+                carrinho.push({ titulo, preco, imagem, codigo, qtd: 1 });
+            }
+            salvarCarrinho();
+            atualizarContador();
+            animarCarrinho();
+            atualizarDropdown();
+        }
+
+        function alterarQtd(index, valor) {
+            carrinho[index].qtd += valor;
+            if (carrinho[index].qtd <= 0) {
+                carrinho.splice(index, 1);
+            }
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+        function removerProduto(index) {
+            carrinho.splice(index, 1);
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+        function atualizarDropdown() {
+            const container = document.getElementById('cart-items');
+            container.innerHTML = '';
+            let total = 0;
+
+            carrinho.forEach((item, index) => {
+                total += item.preco * item.qtd;
+                container.innerHTML += `
+                    <div class="cart-item">
+                        <img src="${item.imagem}" alt="${item.titulo}">
+                        <div class="cart-item-info">
+                            <div class="codigo">${item.codigo ? item.codigo : ''}</div>
+                            <div>${item.titulo}</div>
+                            <div class="cart-controls">
+                                <button onclick="alterarQtd(${index}, -1)">-</button>
+                                <input type="number" min="0" value="${item.qtd}" onchange="alterarQtdInput(${index}, this.value)" style="width: 50px; text-align: center; font-size:16px;">
+                                <button onclick="alterarQtd(${index}, 1)">+</button>
+                                <button class="remove-btn" onclick="removerProduto(${index})">🗑️</button>
+                            </div>
+                            <div>${(item.preco * item.qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('cart-total').textContent =`Total: R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function alterarQtdInput(index, valor) {
+            valor = parseInt(valor);
+            if (isNaN(valor) || valor < 0) valor = 0;
+
+            if (valor === 0) {
+                carrinho.splice(index, 1); // remove se 0
+            } else {
+                carrinho[index].qtd = valor;
+            }
+
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+        }
+
+
+        function toggleCarrinho() {
+            const drop = document.getElementById('cart-dropdown');
+            const isOpen = getComputedStyle(drop).display !== 'none';
+            drop.style.display = isOpen ? 'none' : 'flex';
+        }
+
+        // ====== CONTROLE DE ABRIR/FECHAR ======
+        // Não fechar ao clicar dentro do menu
+        document.getElementById('cart-dropdown').addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+
+        // IMPORTANTE: como já existe onclick="toggleCarrinho()" no HTML,
+        // aqui só paramos a propagação para não disparar o listener do documento.
+        document.getElementById('cart-icon').addEventListener('click', function (e) {
+            e.stopPropagation();
+            // não chama toggleCarrinho() aqui para evitar duplo toggle
+        });
+
+        // Fecha apenas se clicar fora do ícone e do menu
+        document.addEventListener('click', function (event) {
+            const drop = document.getElementById('cart-dropdown');
+            const icon = document.getElementById('cart-icon');
+            if (!drop.contains(event.target) && !icon.contains(event.target)) {
+                drop.style.display = 'none';
+            }
+        });
+
+        
+      /*  function finalizarCompra() {
+            alert('Compra finalizada!');
+            carrinho = [];
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+            document.getElementById('cart-dropdown').style.display = 'none';
+        }*/
+
+function mostrarSucesso(mensagem) {
+    let aviso = document.createElement('div');
+    aviso.className = 'sucesso-tooltip';
+
+    // Cria conteúdo com botão
+    aviso.innerHTML = `
+        <span>${mensagem}</span><br>
+        <button class="copy-btn">📋 Copiar código</button>
+    `;
+
+    document.body.appendChild(aviso);
+
+    // Evento de copiar
+    aviso.querySelector(".copy-btn").addEventListener("click", () => {
+        navigator.clipboard.writeText(mensagem).then(() => {
+            aviso.querySelector(".copy-btn").textContent = "✅ Copiado!";
+            setTimeout(() => aviso.querySelector(".copy-btn").textContent = "📋 Copiar código", 2000);
+        });
+    });
+
+    // Exibir com animação
+    setTimeout(() => aviso.classList.add('show'), 10);
+
+    // Remover após 10s
+    setTimeout(() => {
+        aviso.classList.remove('show');
+        setTimeout(() => aviso.remove(), 400); // esperar terminar animação
+    }, 12000);
+}
+
+    function finalizarCompra() {
+        let total = carrinho.reduce((acc, item) => acc + item.preco * item.qtd, 0);
+        const botao = document.querySelector('.finalizar');
+
+        // Remove tooltip antiga se existir
+        let oldTooltip = document.querySelector('.finalizar-tooltip');
+        if (oldTooltip) oldTooltip.remove();
+
+        if (total < 500) {
+            // Criar tooltip para valor mínimo
+            let tooltip = document.createElement('div');
+            tooltip.classList.add('finalizar-tooltip');
+            tooltip.textContent = 'O valor mínimo para finalizar a compra é R$500,00';
+            botao.appendChild(tooltip);
+
+            setTimeout(() => tooltip.classList.add('show'), 10);
+            setTimeout(() => tooltip.classList.remove('show'), 3500);
+            setTimeout(() => tooltip.remove(), 3500);
+            return;
+        }
+
+        // Enviar pedido para o Flask
+        //fetch('http://127.0.0.1:5000/finalizar', {
+        fetch('https://flask-88cy.onrender.com/finalizar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ total: total, itens: carrinho })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Mostrar sucesso usando sua função CSS
+            mostrarSucesso(`Pedido enviado com sucesso! ID: ${data.pedido_id}`);
+
+            // Limpar carrinho e atualizar
+            carrinho = [];
+            salvarCarrinho();
+            atualizarContador();
+            atualizarDropdown();
+            document.getElementById('cart-dropdown').style.display = 'none';
+        })
+        .catch(err => {
+            let erroTooltip = document.createElement('div');
+            erroTooltip.classList.add('finalizar-tooltip');
+            erroTooltip.textContent = 'Erro ao enviar pedido. Tente novamente!';
+            botao.appendChild(erroTooltip);
+
+            setTimeout(() => erroTooltip.classList.add('show'), 10);
+            setTimeout(() => erroTooltip.classList.remove('show'), 3500);
+            setTimeout(() => erroTooltip.remove(), 3500);
+
+            console.error('Erro ao enviar pedido:', err);
+        });
+    }
+  
+        // Inicialização
+        atualizarContador();
+        atualizarDropdown();
+    </script>
+</body>
+</html>
